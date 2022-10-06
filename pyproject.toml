@@ -1,0 +1,64 @@
+[tool.poetry]
+name = "segal"
+version = "0.1.0"
+description = "Sequence labeling active learning framework for Python"
+authors = ["Xu Liang <liangxu006@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/tech-sketch/SegAL"
+documentation = "https://segal.readthedocs.io"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries",
+]
+packages = [
+    { include = "segal" },
+]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/tech-sketch/SegAL/issues"
+"Changelog" = "https://segal.readthedocs.io/changelog.html"
+
+
+[tool.poetry.dependencies]
+python = "^3.8"
+segmentation-models-pytorch = "0.3.0"
+albumentations = "^1.3.0"
+
+
+[tool.poetry.dev-dependencies]
+black = "^22.6.0"
+flake8 = "^5.0.4"
+isort = "^5.10.1"
+pytest = "^7.1.2"
+pytest-cov = "^3.0.0"
+pyupgrade = {version = "^2.37.3", python = "^3.6.1"}
+tox = "^3.25.1"
+ipython = "^8.4.0"
+ipykernel = "^6.15.1"
+pre-commit = "^2.20.0"
+pylint = "^2.14.5"
+pandas = "^1.4.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "-v -Wdefault --cov=segal"
+testpaths = [
+    "tests",
+]
+
+[tool.isort]
+profile = "black"
+known_first_party = ["segal", "tests"]
+
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = "E203,W503,W504"
+max-complexity = 12
