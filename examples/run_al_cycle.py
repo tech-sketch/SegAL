@@ -6,8 +6,6 @@ from glob import glob
 
 import numpy as np
 import segmentation_models_pytorch as smp
-import torch
-from torch.utils.data import DataLoader
 
 from segal import strategies, utils
 from segal.datasets.camvid import (

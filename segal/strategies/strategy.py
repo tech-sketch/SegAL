@@ -1,23 +1,11 @@
-import os
-import random
-import sys
-import time
-from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-import torch.optim as optim
-from joblib.externals.cloudpickle.cloudpickle import instance
 from segmentation_models_pytorch import utils
-from sklearn import preprocessing
-from sklearn.metrics import pairwise_distances
 from torch import nn
-from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from torchvision.utils import save_image
-from tqdm import tqdm
 
 
 class Strategy:

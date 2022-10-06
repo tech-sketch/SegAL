@@ -56,9 +56,3 @@ testpaths = [
 [tool.isort]
 profile = "black"
 known_first_party = ["segal", "tests"]
-
-
-[tool.flake8]
-max-line-length = 120
-extend-ignore = "E203,W503,W504"
-max-complexity = 12

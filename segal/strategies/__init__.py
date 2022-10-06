@@ -1,4 +1,4 @@
-from .entropy_sampling import EntropySampling
-from .least_confidence import LeastConfidence
-from .margin_sampling import MarginSampling
-from .strategy import Strategy
+from .entropy_sampling import EntropySampling  # noqa: F401
+from .least_confidence import LeastConfidence  # noqa: F401
+from .margin_sampling import MarginSampling  # noqa: F401
+from .strategy import Strategy  # noqa: F401

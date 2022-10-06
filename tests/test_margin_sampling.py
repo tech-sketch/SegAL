@@ -1,10 +1,4 @@
-import math
-import random
-from typing import Dict, List
-from unittest.mock import MagicMock, PropertyMock
-
 import numpy as np
-import pytest
 
 from segal.strategies import MarginSampling
 

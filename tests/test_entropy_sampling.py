@@ -1,10 +1,4 @@
-import math
-import random
-from typing import Dict, List
-from unittest.mock import MagicMock, PropertyMock
-
 import numpy as np
-import pytest
 
 from segal.strategies import EntropySampling
 
@@ -12,7 +6,7 @@ from segal.strategies import EntropySampling
 class TestEntropySampling:
     """Test EntropySampling class"""
 
-    def test_query_return_correct_result(self, probs) -> None:
+    def test_cal_scores_return_correct_result(self, probs) -> None:
         """Test EntropySampling.cal_scores function return correct result if log_probability runs after prediction"""
         # Arrange
         expected = np.array([1.415957])
