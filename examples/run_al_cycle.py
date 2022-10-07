@@ -7,7 +7,7 @@ from glob import glob
 import numpy as np
 import segmentation_models_pytorch as smp
 
-from segal import strategies, utils
+from segal import strategies
 from segal.datasets.camvid import (
     CamvidDataset,
     get_preprocessing,
@@ -157,14 +157,7 @@ for round in range(1, NUM_ROUND + 1):
     print(test_performance)
 
 
-loss_train_logs = [log["dice_loss"] for log in strategy.train_logs]
-loss_val_logs = [log["dice_loss"] for log in strategy.val_logs]
-loss_test_logs = [log["dice_loss"] for log in strategy.test_logs]
-
-iou_train_logs = [log["iou_score"] for log in strategy.train_logs]
-iou_val_logs = [log["iou_score"] for log in strategy.val_logs]
-iou_test_logs = [log["iou_score"] for log in strategy.test_logs]
-
-
-utils.plot_loss(loss_train_logs, loss_val_logs, loss_test_logs)
-utils.plot_score(iou_train_logs, iou_val_logs, iou_test_logs)
+for round, round_log in enumerate(strategy.test_logs):
+    print(
+        f'Round: {round}, dice loss: {round_log["dice_loss"]}, mIoU: {round_log["iou_score"]}'
+    )
