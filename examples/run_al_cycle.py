@@ -7,7 +7,7 @@ from glob import glob
 import numpy as np
 import segmentation_models_pytorch as smp
 
-from segal import strategies
+from segal import strategies, utils
 from segal.datasets.camvid import (
     CamvidDataset,
     get_preprocessing,
@@ -37,6 +37,9 @@ parser.add_argument(
     "--encoder_weights", help="encoder weights - imagenet", type=str, default="imagenet"
 )
 parser.add_argument("--num_classes", help="number of classes", type=int, default=12)
+
+# Mode
+parser.add_argument("--full", help="train model on full data", type=bool, default=False)
 
 # Active Learning Setup
 parser.add_argument(
@@ -80,8 +83,14 @@ test_images = sorted(glob(os.path.join(DATA_DIR, "test/*")))
 test_labels = sorted(glob(os.path.join(DATA_DIR, "testannot/*")))
 
 # Calculate NUM_INIT_LB, NUM_QUERY, NUM_ROUND
-seed_ratio = args.seed_ratio
-query_ratio = args.query_ratio
+if args.full:
+    seed_ratio = 1
+    query_ratio = 0
+
+else:
+    seed_ratio = args.seed_ratio
+    query_ratio = args.query_ratio
+
 NUM_INIT_LB = math.ceil(len(pool_images) * seed_ratio)
 NUM_QUERY = math.ceil(len(pool_images) * query_ratio)
 NUM_ROUND = math.ceil((1 - seed_ratio) / query_ratio)
@@ -138,6 +147,10 @@ n_epoch = args.n_epoch
 test_performance = strategy.train(n_epoch)
 print(test_performance)
 
+if args.full:
+    save_path = f"./output/{DATASET}_{MODEL_NAME}_{ENCODER}_full_test_result.json"
+    utils.save_json(test_performance, save_path)
+
 for round in range(1, NUM_ROUND + 1):
     print(f"Round: {round}")
 
@@ -161,3 +174,9 @@ for round, round_log in enumerate(strategy.test_logs):
     print(
         f'Round: {round}, dice loss: {round_log["dice_loss"]}, mIoU: {round_log["iou_score"]}'
     )
+
+if not args.full:
+    save_path = (
+        f"./output/{DATASET}_{MODEL_NAME}_{ENCODER}_{strategy_name}_test_result.json"
+    )
+    utils.save_json(strategy.test_logs, save_path)
