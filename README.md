@@ -63,7 +63,7 @@ python examples/run_al_cycle.py --dataset CamVid  --data_path ./data/CamVid/ --m
 - `encoder`: name of encoder used in model. More encoder names can be found in [encoders](https://github.com/qubvel/segmentation_models.pytorch#encoders-)
 - `encoder_weights`: pretrained weights. See [encoder table](https://github.com/qubvel/segmentation_models.pytorch#encoders-) with available weights for each encoder
 - `num_classes`: number of classes
-- `strategy`: name of sampling strategy. Available strategies: `LeastConfidence`, `MarginSampling`, `EntropySampling`. You can find the papers for these strategy in [here](https://github.com/cure-lab/deep-active-learning/tree/main#deep-active-learning-strategies)
+- `strategy`: name of sampling strategy. Available strategies: `RandomSampling`, `LeastConfidence`, `MarginSampling`, `EntropySampling`. You can find the papers for these strategy in [here](https://github.com/cure-lab/deep-active-learning/tree/main#deep-active-learning-strategies)
 - `seed_ratio`: percentage of seed data. The  used for initial training. 
 - `query_ratio`: percentage of queried data in each round
 - `n_epoch`: number of epoch in each round

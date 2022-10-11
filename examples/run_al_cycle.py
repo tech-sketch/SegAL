@@ -54,9 +54,11 @@ parser.add_argument(
 
 # Strategy
 parser.add_argument(
-    "--strategy", help="acquisition algorithm", type=str, default="EntropySampling"
+    "--strategy",
+    help="acquisition algorithm, - RandomSampling, LeastConfidence, MarginSampling, EntropySampling",
+    type=str,
+    default="RandomSampling",
 )
-
 
 args = parser.parse_args()
 
