@@ -8,7 +8,7 @@ SeqAL is available on PyPI:
 pip install seqal
 ```
 
-SeqAL officially supports Python 3.8+.
+SeqAL officially supports Python 3.8.
 
 ## Construct Envirement Locally
 

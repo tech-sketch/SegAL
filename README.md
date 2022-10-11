@@ -30,7 +30,7 @@ SegAL is available on PyPI:
 
 `pip install segal`
 
-SegAL officially supports Python 3.8+.
+SegAL officially supports Python 3.8.
 
 ## Active Learning Cycle
 
