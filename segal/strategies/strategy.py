@@ -90,11 +90,11 @@ class Strategy:
                 train_dataset, batch_size=4, shuffle=True, num_workers=4
             )
             valid_loader = DataLoader(
-                valid_dataset, batch_size=1, shuffle=False, num_workers=2
+                valid_dataset, batch_size=10, shuffle=False, num_workers=2
             )
         else:
             train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-            valid_loader = DataLoader(valid_dataset, batch_size=1, shuffle=False)
+            valid_loader = DataLoader(valid_dataset, batch_size=10, shuffle=False)
 
         loss = utils.losses.DiceLoss()
         metrics = [
@@ -155,7 +155,7 @@ class Strategy:
             test_dataset = self.test_dataset
 
         print("Evaluate on test data")
-        test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+        test_dataloader = DataLoader(test_dataset, batch_size=10, shuffle=False)
         test_epoch = utils.train.ValidEpoch(
             model=self.best_model,
             loss=loss,
@@ -171,6 +171,7 @@ class Strategy:
 
     def predict_prob(self, idxs_unlabeled):
 
+        model = self.best_model
         unlabeled_images = [self.pool_images[idx] for idx in idxs_unlabeled]
         unlabeled_labels = [self.pool_labels[idx] for idx in idxs_unlabeled]
 
@@ -184,19 +185,18 @@ class Strategy:
 
         if self.device == "cuda":
             unlabeled_loader = DataLoader(
-                unlabeled_dataset, batch_size=1, shuffle=False, num_workers=2
+                unlabeled_dataset, batch_size=10, shuffle=False, num_workers=2
             )
         else:
             unlabeled_loader = DataLoader(
-                unlabeled_dataset, batch_size=1, shuffle=False
+                unlabeled_dataset, batch_size=10, shuffle=False
             )
 
         probs = []
-        # image_count = 0
         for batch_images, _ in unlabeled_loader:
-            # image_count += len(batch_images)
-            # print(f"Calculate scores for {image_count}/{len(unlabeled_dataset)}")
-            out = self.best_model.predict(batch_images)
+            if self.device == "cuda":
+                batch_images = batch_images.to(self.device)
+            out = model.predict(batch_images)
             batch_probs = F.softmax(out, dim=1)
             batch_probs = batch_probs.detach().cpu().numpy()
             probs.append(batch_probs)
