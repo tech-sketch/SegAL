@@ -86,16 +86,15 @@ test_labels = sorted(glob(os.path.join(DATA_DIR, "testannot/*")))
 
 # Calculate NUM_INIT_LB, NUM_QUERY, NUM_ROUND
 if args.full:
-    seed_ratio = 1
-    query_ratio = 0
-
+    NUM_INIT_LB = len(pool_images)
+    NUM_QUERY = 0
+    NUM_ROUND = 0
 else:
     seed_ratio = args.seed_ratio
     query_ratio = args.query_ratio
-
-NUM_INIT_LB = math.ceil(len(pool_images) * seed_ratio)
-NUM_QUERY = math.ceil(len(pool_images) * query_ratio)
-NUM_ROUND = math.ceil((1 - seed_ratio) / query_ratio)
+    NUM_INIT_LB = math.ceil(len(pool_images) * seed_ratio)
+    NUM_QUERY = math.ceil(len(pool_images) * query_ratio)
+    NUM_ROUND = math.ceil((1 - seed_ratio) / query_ratio)
 
 print(f"Initialize model with {NUM_INIT_LB} images.")
 print(f"Query {NUM_QUERY} images in each round.")
