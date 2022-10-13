@@ -148,6 +148,18 @@ python-versions = ">=3.7"
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
+name = "codespell"
+version = "2.2.1"
+description = "Codespell"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+dev = ["check-manifest", "flake8", "pytest", "pytest-cov", "pytest-dependency"]
+hard-encoding-detection = ["chardet"]
+
+[[package]]
 name = "colorama"
 version = "0.4.5"
 description = "Cross-platform colored terminal text."
@@ -1339,7 +1351,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.9"
-content-hash = "4562d921bb50370674ccd0b162141cdf29cdb0dc48b763473b3d0069f2e7303f"
+content-hash = "47f51b84de3ad086d8d927448f0d780bd0029423643b92a316f3d816d5173c0a"
 
 [metadata.files]
 albumentations = []
@@ -1363,6 +1375,7 @@ cfgv = [
 ]
 charset-normalizer = []
 click = []
+codespell = []
 colorama = []
 contourpy = []
 coverage = []
