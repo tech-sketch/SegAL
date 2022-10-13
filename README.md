@@ -68,4 +68,4 @@ python examples/run_al_cycle.py --dataset CamVid  --data_path ./data/CamVid/ --m
 - `query_ratio`: percentage of queried data in each round
 - `n_epoch`: number of epoch in each round
 
-More explaination can be found in [usage](./docs/usage.md)
+More explanation can be found in [usage](./docs/usage.md)

@@ -20,7 +20,7 @@ python examples/run_al_cycle.py --dataset CamVid  --data_path ./data/CamVid/ --m
 - `query_ratio`: percentage of queried data in each round
 - `n_epoch`: number of epoch in each round
 
-## Explaination
+## Explanation
 
 Below is a active learning workflow that SegAL controls.
 
@@ -138,7 +138,7 @@ print(f"Query {NUM_QUERY} images in each round.")
 print(f"Run {NUM_ROUND} rounds.")
 ```
 
-Accroding to the parameters of `model_name`, `encoder`, `encoder_weights`, `num_classes`, we create the model. Available models, encoders, encoder weights can be found in [here](https://github.com/qubvel/segmentation_models.pytorch#-models-)
+According to the parameters of `model_name`, `encoder`, `encoder_weights`, `num_classes`, we create the model. Available models, encoders, encoder weights can be found in [here](https://github.com/qubvel/segmentation_models.pytorch#-models-)
 
 
 ```python
@@ -200,7 +200,7 @@ strategy = strategies.__dict__[strategy_name](
 )
 ```
 
-We train the model with specified epochs and pring out the performance on test data. 
+We train the model with specified epochs and print out the performance on test data. 
 
 ```python
 print("Round 0: initialize model")

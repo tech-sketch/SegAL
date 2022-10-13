@@ -81,7 +81,7 @@ class CamvidDataset(Dataset):
         image_paths (List[str]): path to images
         mask_paths (List[str]): path to segmentation masks
         class_values (list): values of classes to extract from segmentation mask
-        augmentation (albumentations.Compose): data transfromation pipeline
+        augmentation (albumentations.Compose): data transformation pipeline
             (e.g. flip, scale, etc.)
         preprocessing (albumentations.Compose): data preprocessing
             (e.g. noralization, shape manipulation, etc.)
