@@ -1,10 +1,10 @@
 from pathlib import Path
 
 import numpy as np
+import segmentation_models_pytorch as smp
 import torch
 import torch.nn.functional as F
 from segmentation_models_pytorch import utils
-from torch import nn
 from torch.utils.data import DataLoader
 
 
@@ -18,7 +18,7 @@ class Strategy:
         test_images,
         test_labels,
         idxs_lb,
-        model,
+        model_params,
         dataset,
         dataset_params,
     ):
@@ -35,7 +35,7 @@ class Strategy:
         self.test_dataset = None
         self.n_pool = len(pool_images)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.clf = model.to(self.device)
+        self.model_params = model_params
         self.best_model = None
         self.train_logs = []
         self.val_logs = []
@@ -48,12 +48,12 @@ class Strategy:
         self.idxs_lb = idxs_lb
 
     def train(self, n_epoch=10, activation="softmax2d", base_path="output"):
-        def weight_reset(m):
-            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-                m.reset_parameters()
-
-        model = self.clf
-        model = model.apply(weight_reset)
+        model = smp.__dict__[self.model_params["MODEL_NAME"]](
+            encoder_name=self.model_params["ENCODER"],
+            encoder_weights=self.model_params["ENCODER_WEIGHTS"],
+            classes=self.model_params["NUM_CLASSES"],
+        )
+        model.to(self.device)
 
         if type(base_path) is str:
             base_path = Path(base_path)
@@ -166,7 +166,6 @@ class Strategy:
         round_test_log = test_epoch.run(test_dataloader)
         self.test_logs.append(round_test_log)
 
-        self.clf = self.best_model
         return round_test_log
 
     def predict_prob(self, idxs_unlabeled):

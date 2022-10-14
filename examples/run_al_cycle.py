@@ -106,10 +106,14 @@ MODEL_NAME = args.model_name
 ENCODER = args.encoder
 ENCODER_WEIGHTS = args.encoder_weights
 NUM_CLASSES = args.num_classes
-print(ENCODER, ENCODER_WEIGHTS)
-model = smp.__dict__[MODEL_NAME](
-    encoder_name=ENCODER, encoder_weights=ENCODER_WEIGHTS, classes=NUM_CLASSES
-)
+model_params = {
+    "MODEL_NAME": MODEL_NAME,
+    "ENCODER": ENCODER,
+    "ENCODER_WEIGHTS": ENCODER_WEIGHTS,
+    "NUM_CLASSES": NUM_CLASSES,
+}
+print(f"Model setup: {model_params}")
+
 
 # if dataset is CamVid
 if DATASET == "CamVid":
@@ -137,7 +141,7 @@ strategy = strategies.__dict__[strategy_name](
     test_images,
     test_labels,
     idxs_lb,
-    model,
+    model_params,
     CamvidDataset,
     dataset_params,
 )
