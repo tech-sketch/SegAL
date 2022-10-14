@@ -22,7 +22,7 @@ def get_training_augmentation():
         albu.OneOf(
             [
                 albu.CLAHE(p=1),
-                albu.RandomBrightnessContrast(p=1),
+                albu.RandomBrightness(p=1),
                 albu.RandomGamma(p=1),
             ],
             p=0.9,
@@ -37,7 +37,7 @@ def get_training_augmentation():
         ),
         albu.OneOf(
             [
-                albu.RandomBrightnessContrast(p=1),
+                albu.RandomContrast(p=1),
                 albu.HueSaturationValue(p=1),
             ],
             p=0.9,
