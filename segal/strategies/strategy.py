@@ -47,7 +47,7 @@ class Strategy:
     def update(self, idxs_lb):
         self.idxs_lb = idxs_lb
 
-    def train(self, n_epoch=10, base_path="output"):
+    def train(self, n_epoch=10, activation="softmax2d", base_path="output"):
         def weight_reset(m):
             if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
                 m.reset_parameters()
@@ -96,9 +96,9 @@ class Strategy:
             train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
             valid_loader = DataLoader(valid_dataset, batch_size=10, shuffle=False)
 
-        loss = utils.losses.DiceLoss()
+        loss = utils.losses.DiceLoss(activation=activation)
         metrics = [
-            utils.metrics.IoU(threshold=0.5),
+            utils.metrics.IoU(threshold=0.5, activation=activation),
         ]
 
         optimizer = torch.optim.Adam(
