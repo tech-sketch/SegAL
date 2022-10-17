@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/pypi/l/segal.svg?style=flat-square" alt="License">
 </p>
 
-SegAL is a active learning freamwork for semantice segmentation.
+SegAL is an active learning freamwork for semantice segmentation.
 
 ## Installation
 
