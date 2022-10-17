@@ -43,7 +43,7 @@ ipykernel = "^6.15.1"
 pre-commit = "^2.20.0"
 pylint = "^2.14.5"
 pandas = "^1.4.3"
-codespell = "^2.2.1"
+codespell = "^2.2.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -60,6 +60,6 @@ profile = "black"
 known_first_party = ["segal", "tests"]
 
 [tool.codespell]
-skip = '*.po,*.ts,./src/3rdParty,./src/Test'
+skip = '*.po,*.ts,./.git,./src/3rdParty,./src/Test,./data,./playground'
 count = ''
 quiet-level = 3
