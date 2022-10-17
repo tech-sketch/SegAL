@@ -1,11 +1,14 @@
 import argparse
 import math
 import os
+import random
 import ssl
+from datetime import datetime
 from glob import glob
 
 import numpy as np
 import segmentation_models_pytorch as smp
+import torch
 
 from segal import strategies, utils
 from segal.datasets.camvid import (
@@ -51,6 +54,7 @@ parser.add_argument(
 parser.add_argument(
     "--n_epoch", help="number of training epochs in each iteration", type=int, default=2
 )
+parser.add_argument("--random_seed", help="manual random seed", type=int, default=0)
 
 # Strategy
 parser.add_argument(
@@ -62,6 +66,14 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+
+# Seed
+random_seed = args.random_seed
+torch.manual_seed(random_seed)
+random.seed(random_seed)
+np.random.seed(random_seed)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(random_seed)
 
 # Get data
 DATASET = args.dataset
@@ -94,7 +106,7 @@ else:
     query_ratio = args.query_ratio
     NUM_INIT_LB = math.ceil(len(pool_images) * seed_ratio)
     NUM_QUERY = math.ceil(len(pool_images) * query_ratio)
-    NUM_ROUND = math.ceil((1 - seed_ratio) / query_ratio)
+    NUM_ROUND = math.ceil(len(pool_images) / NUM_QUERY) - 1
 
 print(f"Initialize model with {NUM_INIT_LB} images.")
 print(f"Query {NUM_QUERY} images in each round.")
@@ -146,6 +158,7 @@ strategy = strategies.__dict__[strategy_name](
     dataset_params,
 )
 
+time_start = datetime.now()
 
 print("Round 0: initialize model")
 n_epoch = args.n_epoch
@@ -153,27 +166,40 @@ test_performance = strategy.train(n_epoch)
 print(test_performance)
 
 if args.full:
-    save_path = f"./output/{DATASET}_{MODEL_NAME}_{ENCODER}_full_test_result.json"
+    save_path = f"./output/{DATASET}_{MODEL_NAME}_epoch_{n_epoch}_{ENCODER}_full_test_result.json"
     utils.save_json(test_performance, save_path)
 
-for round in range(1, NUM_ROUND + 1):
-    print(f"Round: {round}")
 
+for round in range(1, NUM_ROUND + 1):
+    time_round_start = datetime.now()
+
+    print(f"Round: {round}")
     labeled = len(np.arange(n_pool)[idxs_lb])  # Mark the index of seed data as labeled
-    print(f"Num of labeled data: {labeled}")
+    print(f"Number of labeled data: {labeled}")
+    print(f"Rest of unlabeled data: {n_pool - labeled}")
     if NUM_QUERY > n_pool - labeled:
         NUM_QUERY = n_pool - labeled
+    print(f"Number of queried data in this round: {NUM_QUERY}")
 
     idxs_queried = strategy.query(NUM_QUERY)
     idxs_lb[idxs_queried] = True
 
     # update labeled data
     strategy.update(idxs_lb)
+    print(f"Number of updated labeled data: {sum(idxs_lb)}")
 
     # retrain model
+    print("Retrain model:")
     test_performance = strategy.train(n_epoch)
     print(test_performance)
 
+    time_round_end = datetime.now() - time_round_start
+    print(f"This round take {time_round_end}")
+    print()
+    print()
+
+time_end = datetime.now() - time_start
+print(f"All rounds take {time_end}")
 
 for round, round_log in enumerate(strategy.test_logs):
     print(
