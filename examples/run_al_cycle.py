@@ -74,6 +74,11 @@ random.seed(random_seed)
 np.random.seed(random_seed)
 if torch.cuda.is_available():
     torch.cuda.manual_seed(random_seed)
+    torch.cuda.manual_seed_all(random_seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    # torch.use_deterministic_algorithms(True, warn_only=True)
+
 
 # Get data
 DATASET = args.dataset
@@ -207,7 +212,5 @@ for round, round_log in enumerate(strategy.test_logs):
     )
 
 if not args.full:
-    save_path = (
-        f"./output/{DATASET}_{MODEL_NAME}_{ENCODER}_{strategy_name}_test_result.json"
-    )
+    save_path = f"./output/{DATASET}_{MODEL_NAME}_{ENCODER}_{strategy_name}_epochs_{n_epoch}_test_result.json"
     utils.save_json(strategy.test_logs, save_path)
