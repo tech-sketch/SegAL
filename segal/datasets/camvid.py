@@ -1,13 +1,19 @@
-from typing import List, Optional
+from typing import Callable, List, Optional, Tuple
 
 import albumentations as albu
 import cv2
 import numpy as np
 from albumentations import BaseCompose
+from torch import Tensor
 from torch.utils.data import Dataset
 
 
-def get_training_augmentation():
+def get_training_augmentation() -> BaseCompose:
+    """Set up training augmentation workflow.
+
+    Returns:
+        BaseCompose: The augmentation transform.
+    """
     train_transform = [
         albu.HorizontalFlip(p=0.5),
         albu.ShiftScaleRotate(
@@ -46,25 +52,39 @@ def get_training_augmentation():
     return albu.Compose(train_transform)
 
 
-def get_validation_augmentation():
-    """Add paddings to make image shape divisible by 32"""
+def get_validation_augmentation() -> BaseCompose:
+    """Set up training augmentation workflow.
+
+    Returns:
+        BaseCompose: The augmentation transform.
+
+    PS:
+        Add paddings to make image shape divisible by 32
+    """
     test_transform = [albu.PadIfNeeded(384, 480)]
     return albu.Compose(test_transform)
 
 
-def to_tensor(x, **kwargs):
+def to_tensor(x: Tensor, **kwargs) -> Tensor:
+    """Convert to tensor.
+
+    Args:
+        x (Tensor): Input image tensor.
+
+    Returns:
+        Tensor: Image tensor after transposed.
+    """
     return x.transpose(2, 0, 1).astype("float32")
 
 
-def get_preprocessing(preprocessing_fn):
+def get_preprocessing(preprocessing_fn: Callable) -> BaseCompose:
     """Construct preprocessing transform
 
     Args:
         preprocessing_fn (callbale): data normalization function
             (can be specific for each pretrained neural network)
     Return:
-        transform: albumentations.Compose
-
+        BaseCompose: The preprocess transform.
     """
 
     _transform = [
@@ -120,7 +140,15 @@ class CamvidDataset(Dataset):
         self.augmentation = augmentation
         self.preprocessing = preprocessing
 
-    def __getitem__(self, i):
+    def __getitem__(self, i) -> Tuple[Tensor, Tensor]:
+        """Get data by index.
+
+        Args:
+            i (int): Index.
+
+        Returns:
+            Tensor, Tensor: image and mask tensor.
+        """
 
         # read data
         image = cv2.imread(self.image_paths[i])
@@ -143,5 +171,10 @@ class CamvidDataset(Dataset):
 
         return image, mask
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """return size of dataset.
+
+        Returns:
+            int: size of dataset.
+        """
         return len(self.image_paths)
