@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import segmentation_models_pytorch as smp
@@ -149,11 +149,11 @@ class Strategy:
                 train_dataset, batch_size=4, shuffle=True, num_workers=4
             )
             valid_loader = DataLoader(
-                valid_dataset, batch_size=10, shuffle=False, num_workers=2
+                valid_dataset, batch_size=1, shuffle=False, num_workers=2
             )
         else:
             train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-            valid_loader = DataLoader(valid_dataset, batch_size=10, shuffle=False)
+            valid_loader = DataLoader(valid_dataset, batch_size=1, shuffle=False)
 
         loss = utils.losses.DiceLoss(activation=activation)
         metrics = [
@@ -200,6 +200,20 @@ class Strategy:
                 torch.save(model, model_path)
                 print("Model saved!")
 
+        return valid_logs
+
+    def evaluate(
+        self, activation: str = "softmax2d", check_point: Optional[str] = None
+    ):
+        loss = utils.losses.DiceLoss(activation=activation)
+        metrics = [
+            utils.metrics.IoU(threshold=0.5, activation=activation),
+        ]
+        if check_point:
+            model = torch.load(check_point)
+        else:
+            model = self.best_model
+
         # Evaluate model on test data
         if self.test_dataset is None:
             test_dataset = self.dataset(
@@ -216,7 +230,7 @@ class Strategy:
         print("Evaluate on test data")
         test_dataloader = DataLoader(test_dataset, batch_size=10, shuffle=False)
         test_epoch = utils.train.ValidEpoch(
-            model=self.best_model,
+            model=model,
             loss=loss,
             metrics=metrics,
             device=self.device,
