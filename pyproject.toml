@@ -44,6 +44,7 @@ pre-commit = "^2.20.0"
 pylint = "^2.14.5"
 pandas = "^1.4.3"
 codespell = "^2.2.2"
+mypy = "^0.991"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -63,3 +64,10 @@ known_first_party = ["segal", "tests"]
 skip = '*.po,*.ts,./.git,./src/3rdParty,./src/Test,./data,./playground'
 count = ''
 quiet-level = 3
+
+[tool.mypy]
+python_version = "3.8"
+no_strict_optional = true
+ignore_missing_imports = true
+check_untyped_defs = true
+
