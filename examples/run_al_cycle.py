@@ -3,7 +3,6 @@ import math
 import os
 import random
 import ssl
-import sys
 import tarfile
 import urllib.request
 from datetime import datetime
@@ -15,10 +14,9 @@ import numpy as np
 import segmentation_models_pytorch as smp
 import torch
 from albumentations import BaseCompose
-from albumentations.pytorch import ToTensorV2
 
 from segal import strategies, utils
-from segal.datasets import CamvidDataset, VOCDataset, transforms
+from segal.datasets import CamvidDataset, VOCDataset
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -111,10 +109,14 @@ elif DATASET == "VOC":
         os.mkdir(data_dir)
 
     if args.full is False:
-        message = "Parameter 'full' have to be True. Because PASCAL VOC 2012 test data does not have ground truth, it can not evaluate test data in active learning cycle. SegAL only support train the model on full training dataset."
+        message = (
+            "Parameter 'full' have to be True. Because PASCAL VOC 2012 test data does not have ground truth,"
+            " it can not evaluate test data in active learning cycle. "
+            "SegAL only support train the model on full training dataset."
+        )
         raise AttributeError(message)
 
-    # If "./data/VOC2012_trainval" not exist, donwload tar file
+    # If "./data/VOC2012_trainval" not exist, download tar file
     if not os.path.exists(DATA_DIR):
         print("Loading data...")
         trainval_dir = "VOC2012_trainval"
@@ -152,10 +154,6 @@ elif DATASET == "VOC":
         for file_name in pool_file_names
     ]
 
-    # 为了方便测试减少训练数据
-    # pool_images = pool_images[:16]
-    # pool_labels = pool_labels[:16]
-
     val_file = trainval_path + "ImageSets/Segmentation/val.txt"
     with open(pool_file, "r") as f:
         val_file_names = [x.strip() for x in f.readlines()]
@@ -166,6 +164,12 @@ elif DATASET == "VOC":
         trainval_path + f"SegmentationClass/{file_name}.png"
         for file_name in val_file_names
     ]
+
+    # 为了方便测试减少训练数据
+    pool_images = pool_images[:16]
+    pool_labels = pool_labels[:16]
+    val_images = val_images[:16]
+    val_labels = val_labels[:16]
 
     test_images = []  # placeholder
     test_labels = []  # placeholder
@@ -395,14 +399,14 @@ strategy = strategies.__dict__[strategy_name](
 time_start = datetime.now()
 n_epoch = args.n_epoch
 
-if args.full == True and DATASET == "VOC":
+if args.full is True and DATASET == "VOC":
     print("Train on full training data")
     val_performance = strategy.train(n_epoch)
     print(f"val_performance: {val_performance}")
     save_path = f"./output/{DATASET}_{MODEL_NAME}_epoch_{n_epoch}_{ENCODER}_full_val_result.json"
     utils.save_json(val_performance, save_path)
 
-elif args.full == True and DATASET != "VOC":
+elif args.full is True and DATASET != "VOC":
     print("Train on full training data")
     val_performance = strategy.train(n_epoch)
     test_performance = strategy.evaluate()
@@ -421,7 +425,9 @@ else:
         time_round_start = datetime.now()
 
         print(f"Round: {round}")
-        labeled = len(np.arange(n_pool)[idxs_lb])  # Mark the index of seed data as labeled
+        labeled = len(
+            np.arange(n_pool)[idxs_lb]
+        )  # Mark the index of seed data as labeled
         print(f"Number of labeled data: {labeled}")
         print(f"Rest of unlabeled data: {n_pool - labeled}")
         if NUM_QUERY > n_pool - labeled:
