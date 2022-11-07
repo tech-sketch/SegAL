@@ -42,7 +42,7 @@ class Strategy:
         val_labels: List[str],
         test_images: List[str],
         test_labels: List[str],
-        idxs_lb: List[bool],
+        idxs_lb: np.ndarray,
         model_params: dict,
         dataset: Dataset,
         dataset_params: dict,
@@ -56,7 +56,7 @@ class Strategy:
             val_labels (List[str]): List of validation label paths.
             test_images (List[str]): List of test image paths.
             test_labels (List[str]): List of test label paths.
-            idxs_lb (List[bool]): List of bool type to record labeled data.
+            idxs_lb (np.ndarray): List of bool type to record labeled data.
             model_params (dict): Model parameters.
                                 e.g. model_params = {
                                         "MODEL_NAME": MODEL_NAME,
@@ -80,23 +80,23 @@ class Strategy:
         self.test_images = test_images
         self.test_labels = test_labels
         self.idxs_lb = idxs_lb
-        self.dataset = dataset
+        self.dataset: Dataset = dataset
         self.dataset_params = dataset_params
         self.val_dataset = None
         self.test_dataset = None
         self.n_pool = len(pool_images)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_params = model_params
-        self.best_model = None
-        self.train_logs = []
-        self.val_logs = []
-        self.test_logs = []
+        self.best_model: torch.nn.Module = torch.nn.Module()
+        self.train_logs: List[dict] = []
+        self.val_logs: List[dict] = []
+        self.test_logs: List[dict] = []
 
-    def query(self, n: int) -> None:
+    def query(self, n: int) -> List[int]:
         """Query data."""
         pass
 
-    def update(self, idxs_lb: List[bool]) -> None:
+    def update(self, idxs_lb: np.ndarray) -> None:
         """Update labeled data index"""
         self.idxs_lb = idxs_lb
 
@@ -104,7 +104,7 @@ class Strategy:
         self,
         n_epoch: int = 10,
         activation: str = "softmax2d",
-        base_path: str = "output",
+        save_path: str = "output",
     ) -> dict:
         """Train model and return performance on test data"""
         model = smp.__dict__[self.model_params["MODEL_NAME"]](
@@ -114,8 +114,7 @@ class Strategy:
         )
         model.to(self.device)
 
-        if type(base_path) is str:
-            base_path = Path(base_path)
+        base_path = Path(save_path)
         if not base_path.exists():
             base_path.mkdir(exist_ok=True, parents=True)
 
@@ -124,13 +123,13 @@ class Strategy:
         train_images = [self.pool_images[idx] for idx in idxs_train]
         train_labels = [self.pool_labels[idx] for idx in idxs_train]
 
-        train_dataset = self.dataset(
+        train_dataset: Dataset = self.dataset(
             train_images,
             train_labels,
             augmentation=self.dataset_params["training_augmentation"],
             preprocessing=self.dataset_params["preprocessing"],
             classes=self.dataset_params["classes"],
-        )
+        )  # type: ignore[operator]
 
         if self.val_dataset is None:
             valid_dataset = self.dataset(
@@ -139,7 +138,7 @@ class Strategy:
                 augmentation=self.dataset_params["validation_augmentation"],
                 preprocessing=self.dataset_params["preprocessing"],
                 classes=self.dataset_params["classes"],
-            )
+            )  # type: ignore[operator]
             self.valid_dataset = valid_dataset
         else:
             valid_dataset = self.valid_dataset
@@ -222,7 +221,7 @@ class Strategy:
                 augmentation=self.dataset_params["validation_augmentation"],
                 preprocessing=self.dataset_params["preprocessing"],
                 classes=self.dataset_params["classes"],
-            )
+            )  # type: ignore[operator]
             self.test_dataset = test_dataset
         else:
             test_dataset = self.test_dataset
@@ -241,16 +240,17 @@ class Strategy:
 
         return round_test_log
 
-    def predict_prob(self, idxs_unlabeled: List[int]) -> np.array:
+    def predict_prob(self, idxs_unlabeled: List[int]) -> np.ndarray:
         """Predict on unlabeled data.
 
         Args:
             idxs_unlabeled (List[int]): List of unlabeled data indices.
 
         Returns:
-            np.array: Probability of classes.
+            np.ndarray: Probability of classes.
         """
         model = self.best_model
+        # model:torch.nn.Module = self.best_model
         unlabeled_images = [self.pool_images[idx] for idx in idxs_unlabeled]
         unlabeled_labels = [self.pool_labels[idx] for idx in idxs_unlabeled]
 
@@ -260,7 +260,7 @@ class Strategy:
             augmentation=self.dataset_params["validation_augmentation"],
             preprocessing=self.dataset_params["preprocessing"],
             classes=self.dataset_params["classes"],
-        )
+        )  # type: ignore[operator]
 
         if self.device == "cuda":
             unlabeled_loader = DataLoader(
@@ -275,11 +275,11 @@ class Strategy:
         for batch_images, _ in unlabeled_loader:
             if self.device == "cuda":
                 batch_images = batch_images.to(self.device)
-            out = model.predict(batch_images)
+            out = model.predict(batch_images)  # type: ignore[operator]
             batch_probs = F.softmax(out, dim=1)
             batch_probs = batch_probs.detach().cpu().numpy()
             probs.append(batch_probs)
 
-        probs = np.concatenate(probs, axis=0)
+        concat_probs = np.concatenate(probs, axis=0)
 
-        return probs
+        return concat_probs

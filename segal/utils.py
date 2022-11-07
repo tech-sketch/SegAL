@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 def plot_loss(
-    full_result: List[dict],
+    full_result: dict,
     random_result: List[dict],
     strategy_result: List[dict],
     save_path: str = "./output/loss.png",
@@ -35,7 +35,7 @@ def plot_loss(
 
 
 def plot_score(
-    full_result: List[dict],
+    full_result: dict,
     random_result: List[dict],
     strategy_result: List[dict],
     save_path: str = "./output/score.png",

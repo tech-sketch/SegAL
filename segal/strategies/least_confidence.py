@@ -42,7 +42,7 @@ class LeastConfidence(Strategy):
         val_labels: List[str],
         test_images: List[str],
         test_labels: List[str],
-        idxs_lb: List[bool],
+        idxs_lb: np.ndarray,
         model_params: dict,
         dataset: Dataset,
         dataset_params: dict,
@@ -60,7 +60,7 @@ class LeastConfidence(Strategy):
             dataset_params,
         )
 
-    def get_topk_idxs(self, scores: np.array, k: int) -> List[int]:
+    def get_topk_idxs(self, scores: np.ndarray, k: int) -> np.ndarray:
         """Get top k indices."""
         if isinstance(scores, list):
             scores = np.array(scores)
@@ -85,7 +85,7 @@ class LeastConfidence(Strategy):
         return idxs_queried
 
     @staticmethod
-    def cal_scores(probs: np.array) -> np.array:  # B,C,H,W
+    def cal_scores(probs: np.ndarray) -> np.ndarray:  # B,C,H,W
         """Calculate score by probability.
 
         Args:
@@ -98,7 +98,7 @@ class LeastConfidence(Strategy):
         max_conf = np.max(probs, axis=1)
         for conf in max_conf:
             scores.append(np.mean(conf))
-        scores = (
+        return_scores = (
             np.array(scores) * -1
         )  # the smaller the better (confidence is low) -> Reverse it makes the larger the better
-        return scores
+        return return_scores

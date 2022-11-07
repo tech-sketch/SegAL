@@ -1,6 +1,5 @@
 from typing import List, Optional, Tuple
 
-import albumentations as albu
 import cv2
 import numpy as np
 from albumentations import BaseCompose

@@ -42,7 +42,7 @@ class EntropySampling(Strategy):
         val_labels: List[str],
         test_images: List[str],
         test_labels: List[str],
-        idxs_lb: List[bool],
+        idxs_lb: np.ndarray,
         model_params: dict,
         dataset: Dataset,
         dataset_params: dict,
@@ -60,7 +60,7 @@ class EntropySampling(Strategy):
             dataset_params,
         )
 
-    def get_topk_idxs(self, scores: np.array, k: int) -> List[int]:
+    def get_topk_idxs(self, scores: np.ndarray, k: int) -> np.ndarray:
         """Get top k indices."""
         return scores.argsort()[::-1][:k]
 
@@ -83,14 +83,14 @@ class EntropySampling(Strategy):
         return idxs_queried
 
     @staticmethod
-    def cal_scores(probs: np.array) -> np.array:  # B,C,H,W
+    def cal_scores(probs: np.ndarray) -> np.ndarray:  # B,C,H,W
         """Calculate score by probability.
 
         Args:
-            probs (np.array): Probability.
+            probs (np.ndarray): Probability.
 
         Returns:
-            np.array: Image score.
+            np.ndarray: Image score.
         """
         scores = []
         for i in range(len(probs)):  # one img prob

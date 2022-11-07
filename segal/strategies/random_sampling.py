@@ -42,7 +42,7 @@ class RandomSampling(Strategy):
         val_labels: List[str],
         test_images: List[str],
         test_labels: List[str],
-        idxs_lb: List[bool],
+        idxs_lb: np.ndarray,
         model_params: dict,
         dataset: Dataset,
         dataset_params: dict,
