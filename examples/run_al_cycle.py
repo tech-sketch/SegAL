@@ -42,9 +42,6 @@ parser.add_argument(
 )
 parser.add_argument("--num_classes", help="number of classes", type=int, default=12)
 
-# Mode
-parser.add_argument("--full", help="train model on full data", type=bool, default=False)
-
 # Active Learning Setup
 parser.add_argument(
     "--seed_ratio", help="percentage of seed data", type=float, default=0.4
@@ -64,6 +61,9 @@ parser.add_argument(
     type=str,
     default="RandomSampling",
 )
+
+# Mode
+parser.add_argument("--full", help="train model on full data", action="store_true")
 
 args = parser.parse_args()
 
@@ -108,15 +108,7 @@ elif DATASET == "VOC":
     if not os.path.exists(data_dir):
         os.mkdir(data_dir)
 
-    if args.full is False:
-        message = (
-            "Parameter 'full' have to be True. Because PASCAL VOC 2012 test data does not have ground truth,"
-            " it can not evaluate test data in active learning cycle. "
-            "SegAL only support train the model on full training dataset."
-        )
-        raise AttributeError(message)
-
-    # If "./data/VOC2012_trainval" not exist, download tar file
+    # If "./data/VOC2012_trainval" not exist, donwload tar file
     if not os.path.exists(DATA_DIR):
         print("Loading data...")
         trainval_dir = "VOC2012_trainval"
@@ -140,7 +132,7 @@ elif DATASET == "VOC":
     else:
         trainval_target_path = DATA_DIR  # "./data/VOC2012_trainval"
 
-    # Load data paths
+    # Load training data paths
     trainval_path = os.path.join(trainval_target_path, "VOCdevkit/VOC2012/")
     pool_file = trainval_path + "ImageSets/Segmentation/train.txt"
     with open(pool_file, "r") as f:
@@ -154,6 +146,7 @@ elif DATASET == "VOC":
         for file_name in pool_file_names
     ]
 
+    # Load val data paths
     val_file = trainval_path + "ImageSets/Segmentation/val.txt"
     with open(pool_file, "r") as f:
         val_file_names = [x.strip() for x in f.readlines()]
@@ -165,17 +158,52 @@ elif DATASET == "VOC":
         for file_name in val_file_names
     ]
 
-    # 为了方便测试减少训练数据
+    # If using full mode, there is no test dataset
+    # If not using full mode (active learning mode), 10% of training data will be used as validation data.
+    # The validation data will be used as test data.
+    if args.full:
+        test_images = []  # placeholder
+        test_labels = []  # placeholder
+    else:
+        message = (
+            "Parameter 'full' have to be True. Because PASCAL VOC 2012 test data does not have ground truth,"
+            " it can not evaluate test data in active learning cycle. "
+            "SegAL only support train the model on full training dataset."
+        )
+        print(message)
+        test_images = val_images.copy()
+        test_labels = val_labels.copy()
+
+        pool_images_all = pool_images.copy()
+        pool_labels_all = pool_labels.copy()
+        n_pool = len(pool_images_all)
+        idxs_train = np.arange(n_pool)
+        np.random.shuffle(idxs_train)
+
+        idxs_val = idxs_train[: int(n_pool * 0.1)]
+        idxs_train = idxs_train[int(n_pool * 0.1) :]
+
+        val_images = [pool_images_all[x] for x in idxs_val]
+        val_labels = [pool_labels_all[x] for x in idxs_val]
+
+        pool_images = [pool_images_all[x] for x in idxs_train]
+        pool_labels = [pool_labels_all[x] for x in idxs_train]
+
+    # Test on small data
     pool_images = pool_images[:16]
     pool_labels = pool_labels[:16]
     val_images = val_images[:16]
     val_labels = val_labels[:16]
+    test_images = test_images[:16]
+    test_labels = test_labels[:16]
 
-    test_images = []  # placeholder
-    test_labels = []  # placeholder
 else:
     raise AttributeError("Dataset is not supported. Please add the custom dataset")
 
+# Output size of dataset
+print(f"Number of training data: {len(pool_images)}")
+print(f"Number of val data: {len(val_images)}")
+print(f"Number of test data: {len(test_images)}")
 
 # Calculate NUM_INIT_LB, NUM_QUERY, NUM_ROUND
 if args.full:
@@ -447,7 +475,7 @@ else:
         print(test_performance)
 
         time_round_end = datetime.now() - time_round_start
-        print(f"This round take {time_round_end}")
+        print(f"This round takes {time_round_end}")
         print()
         print()
 
