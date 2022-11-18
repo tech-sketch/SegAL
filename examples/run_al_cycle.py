@@ -16,7 +16,7 @@ import torch
 from albumentations import BaseCompose
 
 from segal import strategies, utils
-from segal.datasets import CamvidDataset, VOCDataset
+from segal.datasets import CamvidDataset, VOCDataset, CityscapesDataset
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -189,14 +189,34 @@ elif DATASET == "VOC":
         pool_images = [pool_images_all[x] for x in idxs_train]
         pool_labels = [pool_labels_all[x] for x in idxs_train]
 
-    # Test on small data
-    pool_images = pool_images[:16]
-    pool_labels = pool_labels[:16]
-    val_images = val_images[:16]
-    val_labels = val_labels[:16]
-    test_images = test_images[:16]
-    test_labels = test_labels[:16]
+    # # Test on small data
+    # pool_images = pool_images[:16]
+    # pool_labels = pool_labels[:16]
+    # val_images = val_images[:16]
+    # val_labels = val_labels[:16]
+    # test_images = test_images[:16]
+    # test_labels = test_labels[:16]
 
+elif DATASET == "CityScapes":
+    images_dir = os.path.join(DATA_DIR, "leftImg8bit")
+    labels_dir = os.path.join(DATA_DIR, "gtFine")
+
+    pool_images = sorted(glob(os.path.join(os.path.join(DATA_DIR, "leftImg8bit/train"), "*/*_leftImg8bit.png")))
+    pool_labels = sorted(glob(os.path.join(os.path.join(DATA_DIR, "gtFine/train"), "*/*_gtFine_labelIds.png")))
+
+    val_images = sorted(glob(os.path.join(os.path.join(DATA_DIR, "leftImg8bit/val"), "*/*_leftImg8bit.png")))
+    val_labels = sorted(glob(os.path.join(os.path.join(DATA_DIR, "gtFine/val"), "*/*_gtFine_labelIds.png")))
+
+    test_images = sorted(glob(os.path.join(os.path.join(DATA_DIR, "leftImg8bit/test"), "*/*_leftImg8bit.png")))
+    test_labels = sorted(glob(os.path.join(os.path.join(DATA_DIR, "gtFine/test"), "*/*_gtFine_labelIds.png")))
+
+    # Test on small data
+    # pool_images = pool_images[:16]
+    # pool_labels = pool_labels[:16]
+    # val_images = val_images[:4]
+    # val_labels = val_labels[:4]
+    # test_images = test_images[:4]
+    # test_labels = test_labels[:4]
 else:
     raise AttributeError("Dataset is not supported. Please add the custom dataset")
 
@@ -400,6 +420,77 @@ elif DATASET == "VOC":
         "classes": VOCDataset.CLASSES,
     }
     DatasetClass = VOCDataset
+
+elif DATASET == "CityScapes":
+    crop_size = args.crop_size
+    preprocessing_fn = smp.encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
+    train_transform = albu.Compose(
+        [
+            albu.RandomScale((-0.1, 1.0)),
+            albu.PadIfNeeded(
+                min_height=crop_size,
+                min_width=crop_size,
+                always_apply=True,
+                border_mode=0,
+            ),
+            albu.RandomCrop(crop_size, crop_size),
+            albu.HorizontalFlip(),
+            albu.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225],
+            ),
+            # ToTensorV2(),
+        ]
+    )
+    val_transform = albu.Compose(
+        [
+            albu.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225],
+            ),
+            albu.PadIfNeeded(
+                min_height=crop_size,
+                min_width=crop_size,
+                always_apply=True,
+                border_mode=0,
+            ),
+        ]
+    )
+
+    def to_tensor(x: torch.Tensor, **kwargs) -> torch.Tensor:
+        """Convert to tensor.
+
+        Args:
+            x (Tensor): Input image tensor.
+
+        Returns:
+            Tensor: Image tensor after transposed.
+        """
+        return x.transpose(2, 0, 1).astype("float32")
+
+    def get_preprocessing(preprocessing_fn: Callable) -> BaseCompose:
+        """Construct preprocessing transform
+
+        Args:
+            preprocessing_fn (callbale): data normalization function
+                (can be specific for each pretrained neural network)
+        Return:
+            BaseCompose: The preprocess transform.
+        """
+
+        _transform = [
+            albu.Lambda(image=preprocessing_fn),
+            albu.Lambda(image=to_tensor, mask=to_tensor),
+        ]
+        return albu.Compose(_transform)
+
+    dataset_params = {
+        "training_augmentation": train_transform,
+        "validation_augmentation": val_transform,
+        "preprocessing": get_preprocessing(preprocessing_fn),
+        "classes": CityscapesDataset.CLASSES,
+    }
+    DatasetClass = CityscapesDataset
 
 
 # Set up index recorder
