@@ -61,9 +61,14 @@ def get_high_confidence_samples(probs: np.ndarray,
     np.array with dimension (K x 1) containing the predicted classes of the
         k most informative samples
     """
-    scores, _ = CealSampling.cal_scores(probs)
+    scores, entropy_maps = CealSampling.cal_scores(probs)
     topk_idxs = CealSampling.get_topk_idxs(scores, k)
     pred_class = np.argmax(probs, axis=1)
+    for idx, entropy_map in entropy_maps.items():
+        entropy_map = np.argmax(entropy_map, axis=0)
+        qualified_area = entropy_map <= delta
+        if np.any(qualified_area):
+            pred_class[idx][qualified_area is False] = 255
     labels = pred_class[topk_idxs]
     return topk_idxs, labels
 
@@ -123,7 +128,7 @@ class CealSampling(Strategy):
             dataset_params,
         )
 
-        self.start_entropy_threshold = start_entropy_threshold
+        self.current_entropy_threshold = start_entropy_threshold
         self.entropy_change_per_selection = entropy_change_per_selection
 
 
@@ -145,6 +150,7 @@ class CealSampling(Strategy):
         hcs_idx, _ = get_high_confidence_samples(probs, self.start_entropy_threshold, n)
         hcs_idx = idxs_unlabeled[hcs_idx]  # idxs_queried: index in pool_images
         idxs_queried = list(set(us_idxs) | set(hcs_idx))
+        self.current_entropy_threshold -= self.entropy_change_per_selection
         return idxs_queried
 
     @staticmethod
