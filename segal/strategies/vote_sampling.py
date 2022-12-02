@@ -1,8 +1,8 @@
 from typing import List
 
 import numpy as np
-from torch.utils.data import Dataset
 import torch
+from torch.utils.data import Dataset
 
 from .strategy import Strategy
 
@@ -82,8 +82,6 @@ class VoteSampling(Strategy):
     @staticmethod
     def get_topk_idxs(scores: np.ndarray, k: int) -> np.ndarray:
         """Get top k indices."""
-        if isinstance(scores, list):
-            scores = np.array(scores)
         return scores.argsort()[::-1][:k]
 
     def cal_scores(self, probs: np.ndarray, steps: int = 20) -> np.ndarray:  # B,C,H,W
@@ -96,7 +94,9 @@ class VoteSampling(Strategy):
             np.array: Image score.
         """
         num_classes = self.model_params["NUM_CLASSES"]
-        outputs = torch.FloatTensor(probs.shape[0], num_classes, probs.shape[2], probs.shape[3]).fill_(0)
+        outputs = torch.FloatTensor(
+            probs.shape[0], num_classes, probs.shape[2], probs.shape[3]
+        ).fill_(0)
 
         with torch.no_grad():
             for _ in range(steps):
@@ -107,8 +107,10 @@ class VoteSampling(Strategy):
         for i in range(probs.shape[0]):
             entropy_map = torch.FloatTensor(probs.shape[2], probs.shape[3]).fill_(0)
             for c in range(num_classes):
-                entropy_map = entropy_map - (outputs[i, c, :, :] * torch.log2(outputs[i, c, :, :] + 1e-12))
+                entropy_map = entropy_map - (
+                    outputs[i, c, :, :] * torch.log2(outputs[i, c, :, :] + 1e-12)
+                )
             score = np.mean(-np.nansum(entropy_map.cpu().numpy(), axis=0))
             scores.append(score)
 
-        return scores
+        return np.array(scores)

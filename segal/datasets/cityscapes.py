@@ -7,7 +7,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 
-class CityscapesDataset:
+class CityscapesDataset(Dataset):
     """Cityscapes Dataset.
 
     Args:
@@ -20,7 +20,8 @@ class CityscapesDataset:
             (e.g. noralization, shape manipulation, etc.)
 
     """
-    mapping = { 
+
+    mapping = {
         0: 0,
         1: 0,
         2: 0,
@@ -55,11 +56,32 @@ class CityscapesDataset:
         31: 17,
         32: 18,
         33: 19,
-        -1: 0
+        -1: 0,
     }
 
     # The values above are remapped to the following
-    CLASSES = ['unlabeled', 'road', 'sidewalk', 'building', 'wall', 'fence', 'pole', 'traffic_light', 'traffic_sign', 'vegetation', 'terrain', 'sky', 'person', 'rider', 'car', 'truck', 'bus', 'train', 'motorcycle', 'bicycle']
+    CLASSES = [
+        "unlabeled",
+        "road",
+        "sidewalk",
+        "building",
+        "wall",
+        "fence",
+        "pole",
+        "traffic_light",
+        "traffic_sign",
+        "vegetation",
+        "terrain",
+        "sky",
+        "person",
+        "rider",
+        "car",
+        "truck",
+        "bus",
+        "train",
+        "motorcycle",
+        "bicycle",
+    ]
 
     def __init__(
         self,

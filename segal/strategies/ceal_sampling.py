@@ -1,17 +1,15 @@
 from typing import List, Tuple
 
 import numpy as np
-import torch
 from torch.utils.data import Dataset
 
-from .strategy import Strategy
 from .entropy_sampling import EntropySampling
 from .least_confidence import LeastConfidence
 from .margin_sampling import MarginSampling
+from .strategy import Strategy
 
 
-def get_uncertain_samples_idxs(probs: np.ndarray, n: int,
-                          criteria: str) -> Tuple[np.ndarray, np.ndarray]:
+def get_uncertain_samples_idxs(probs: np.ndarray, n: int, criteria: str) -> np.ndarray:
     """
     Get the K most informative samples based on the criteria
     Parameters
@@ -27,23 +25,23 @@ def get_uncertain_samples_idxs(probs: np.ndarray, n: int,
     -------
     tuple(np.ndarray, np.ndarray)
     """
-    if criteria == 'lc':
+    if criteria == "lc":
         scores = LeastConfidence.cal_scores(probs)
         topk_idxs = LeastConfidence.get_topk_idxs(scores, n)
-    elif criteria == 'ms':
+    elif criteria == "ms":
         scores = MarginSampling.cal_scores(probs)
         topk_idxs = MarginSampling.get_topk_idxs(scores, n)
-    elif criteria == 'en':
+    elif criteria == "en":
         scores = EntropySampling.cal_scores(probs)
         topk_idxs = EntropySampling.get_topk_idxs(scores, n)
     else:
-        raise ValueError('criteria {} not found !'.format(criteria))
+        raise ValueError("criteria {} not found !".format(criteria))
     return topk_idxs
 
 
-def get_high_confidence_samples(probs: np.ndarray,
-                                delta: float,
-                                k: int) -> Tuple[np.ndarray, np.ndarray]:
+def get_high_confidence_samples(
+    probs: np.ndarray, delta: float, k: int
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Select high confidence samples from `D^U` whose entropy is smaller than
      the threshold
@@ -71,6 +69,7 @@ def get_high_confidence_samples(probs: np.ndarray,
             pred_class[idx][qualified_area is False] = 255
     labels = pred_class[topk_idxs]
     return topk_idxs, labels
+
 
 class CealSampling(Strategy):
     """CEAL Sampling Class.
@@ -131,7 +130,6 @@ class CealSampling(Strategy):
         self.current_entropy_threshold = start_entropy_threshold
         self.entropy_change_per_selection = entropy_change_per_selection
 
-
     def query(self, n: int, criteria: str = "lc") -> List[int]:
         """Query data.
 
@@ -147,7 +145,9 @@ class CealSampling(Strategy):
         probs = self.predict_prob(idxs_unlabeled)
         us_idxs = get_uncertain_samples_idxs(probs, n, criteria)
         us_idxs = idxs_unlabeled[us_idxs]  # idxs_queried: index in pool_images
-        hcs_idx, _ = get_high_confidence_samples(probs, self.start_entropy_threshold, n)
+        hcs_idx, _ = get_high_confidence_samples(
+            probs, self.current_entropy_threshold, n
+        )
         hcs_idx = idxs_unlabeled[hcs_idx]  # idxs_queried: index in pool_images
         idxs_queried = list(set(us_idxs) | set(hcs_idx))
         self.current_entropy_threshold -= self.entropy_change_per_selection

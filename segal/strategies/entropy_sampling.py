@@ -77,7 +77,7 @@ class EntropySampling(Strategy):
         topk_idxs = self.get_topk_idxs(scores, n)  # index in scores
         idxs_queried = idxs_unlabeled[topk_idxs]  # idxs_queried: index in pool_images
         return idxs_queried
-    
+
     @staticmethod
     def get_topk_idxs(scores: np.ndarray, k: int) -> np.ndarray:
         """Get top k indices."""
