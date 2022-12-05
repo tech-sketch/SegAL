@@ -139,6 +139,7 @@ class CityscapesDataset(Dataset):
         return len(self.image_paths)
 
     def encode_labels(self, mask: np.ndarray) -> np.ndarray:
+        """Convert 33 classes to 20 classes"""
         label_mask = np.zeros_like(mask)
         for k in self.mapping:
             label_mask[mask == k] = self.mapping[k]
