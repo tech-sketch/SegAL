@@ -81,8 +81,8 @@ class TestCealSampling:
         idxs_tmp = np.arange(n_pool)
         idxs_lb[idxs_tmp[:2]] = True  # [ True,  True, False, False, False]
         DatasetClass = None
-        dataset_params = None
-        model_params = None
+        dataset_params = {}
+        model_params = {}
 
         sampling = CealSampling(
             pool_images,

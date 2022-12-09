@@ -8,6 +8,8 @@ import torch.nn.functional as F
 from segmentation_models_pytorch import utils
 from torch.utils.data import DataLoader, Dataset
 
+from segal.utils import is_array_of_bools, is_list_of_strings
+
 
 class Strategy:
     """Base Strategy class.
@@ -73,20 +75,39 @@ class Strategy:
                                                 "classes": CamvidDataset.CLASSES,
                                             }
         """
-        self.pool_images = pool_images
-        self.pool_labels = pool_labels
-        self.val_images = val_images
-        self.val_labels = val_labels
-        self.test_images = test_images
-        self.test_labels = test_labels
-        self.idxs_lb = idxs_lb
+        if not all(
+            [
+                is_list_of_strings(pool_images),
+                is_list_of_strings(pool_labels),
+                is_list_of_strings(val_images),
+                is_list_of_strings(val_labels),
+                is_list_of_strings(test_images),
+                is_list_of_strings(test_images),
+                is_list_of_strings(test_labels),
+            ]
+        ):
+            raise TypeError("Images paths must be a list of string!")
+        if not is_array_of_bools(idxs_lb):
+            raise TypeError("idxs_lb must be a numpy array of bool!")
+        if not isinstance(dataset_params, dict):
+            raise TypeError("dataset_params must be a dict!")
+        if not isinstance(model_params, dict):
+            raise TypeError("model_params must be a numpy array!")
+
+        self.pool_images: List[str] = pool_images
+        self.pool_labels: List[str] = pool_labels
+        self.val_images: List[str] = val_images
+        self.val_labels: List[str] = val_labels
+        self.test_images: List[str] = test_images
+        self.test_labels: List[str] = test_labels
+        self.idxs_lb: np.ndarray = idxs_lb
         self.dataset: Dataset = dataset
-        self.dataset_params = dataset_params
+        self.dataset_params: dict = dataset_params
+        self.model_params: dict = model_params
         self.val_dataset = None
         self.test_dataset = None
         self.n_pool = len(pool_images)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model_params = model_params
         self.best_model: torch.nn.Module = torch.nn.Module()
         self.train_logs: List[dict] = []
         self.val_logs: List[dict] = []

@@ -1,6 +1,24 @@
 import json
 from typing import Any, List
 
+import numpy as np
+
+
+def is_list_of_strings(lst):
+    """Check if a list only contains strings"""
+    if lst and isinstance(lst, list):
+        return all(isinstance(elem, str) for elem in lst)
+    else:
+        return False
+
+
+def is_array_of_bools(array):
+    """Check if a list only contains strings"""
+    if isinstance(array, np.ndarray) and len(list(array)) != []:
+        return all(type(elem) != bool for elem in array)
+    else:
+        return False
+
 
 def save_json(data: Any, save_path: str) -> None:
     """Save data to json format.

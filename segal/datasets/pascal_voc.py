@@ -1,6 +1,11 @@
+from typing import List, Optional
+
 import cv2
 import numpy as np
+from albumentations import BaseCompose
 from torch.utils.data import Dataset
+
+from segal.utils import is_list_of_strings
 
 
 class VOCDataset(Dataset):
@@ -31,9 +36,17 @@ class VOCDataset(Dataset):
     ]
 
     def __init__(
-        self, image_paths, mask_paths, classes, augmentation=None, preprocessing=None
+        self,
+        image_paths: List[str],
+        mask_paths: List[str],
+        classes: Optional[List[str]] = None,
+        augmentation: Optional[BaseCompose] = None,
+        preprocessing: Optional[BaseCompose] = None,
     ):
-
+        if not all([is_list_of_strings(image_paths), is_list_of_strings(mask_paths)]):
+            raise TypeError("Images paths must be a list of string!")
+        if not is_list_of_strings(classes):
+            raise TypeError("classes must be a numpy array!")
         self.image_paths = image_paths
         self.mask_paths = mask_paths
         self.class_values = [self.CLASSES.index(cls.lower()) for cls in classes]

@@ -6,6 +6,8 @@ from albumentations import BaseCompose
 from torch import Tensor
 from torch.utils.data import Dataset
 
+from segal.utils import is_list_of_strings
+
 
 class CamvidDataset(Dataset):
     """CamVid Dataset. Read images, apply augmentation and preprocessing transformations.
@@ -40,10 +42,14 @@ class CamvidDataset(Dataset):
         self,
         image_paths: List[str],
         mask_paths: List[str],
-        classes: Optional[str] = None,
+        classes: Optional[List[str]] = None,
         augmentation: Optional[BaseCompose] = None,
         preprocessing: Optional[BaseCompose] = None,
     ):
+        if not all([is_list_of_strings(image_paths), is_list_of_strings(mask_paths)]):
+            raise TypeError("Images paths must be a list of string!")
+        if not is_list_of_strings(classes):
+            raise TypeError("classes must be a numpy array!")
         self.image_paths = image_paths
         self.mask_paths = mask_paths
 
