@@ -9,16 +9,18 @@ This tutorial explain how SegAL performs active learning cycle for semantic segm
 python examples/run_al_cycle.py --dataset CamVid  --data_path ./data/CamVid/ --model_name Unet --encoder resnet34 --encoder_weights imagenet --num_classes 12 --strategy LeastConfidence --seed_ratio 0.02 --query_ratio 0.02 --n_epoch 1
 ```
 
-- `dataset`: which dataset to use
+- `dataset`: which dataset to use, [`CamVid`](http://mi.eng.cam.ac.uk/research/projects/VideoRec/CamVid/)、[`VOC`](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/)、[`CityScapes`](https://www.cityscapes-dataset.com/)
 - `data_path`: the path where the data store
+- `crop_size`: corp size. Corp big size image to train faster.
+- `num_classes`: number of classes
 - `model_name`: name of segmentation model. More model names can be found in [architectures](https://github.com/qubvel/segmentation_models.pytorch#architectures-)
 - `encoder`: name of encoder used in model. More encoder names can be found in [encoders](https://github.com/qubvel/segmentation_models.pytorch#encoders-)
 - `encoder_weights`: pretrained weights. See [encoder table](https://github.com/qubvel/segmentation_models.pytorch#encoders-) with available weights for each encoder
-- `num_classes`: number of classes
-- `strategy`: name of sampling strategy
+- `strategy`: name of sampling strategy. Available strategies: `RandomSampling`, `LeastConfidence`, `MarginSampling`, `EntropySampling`, `CealSampling`, `VoteSampling`. You can find the papers for these strategy in [here](https://github.com/cure-lab/deep-active-learning/tree/main#deep-active-learning-strategies)
 - `seed_ratio`: percentage of seed data. The  used for initial training. 
 - `query_ratio`: percentage of queried data in each round
 - `n_epoch`: number of epoch in each round
+- `random_seed`: random seed
 
 ## Explanation
 
@@ -56,6 +58,7 @@ parser = argparse.ArgumentParser()
 # Dataset
 parser.add_argument("--dataset", help="dataset", type=str, default="CamVid")
 parser.add_argument("--data_path", help="data path", type=str, default="./data/CamVid/")
+parser.add_argument("--crop_size", help="crop size", type=int, default=512)
 
 # Model
 parser.add_argument(
@@ -82,6 +85,8 @@ parser.add_argument(
 parser.add_argument(
     "--n_epoch", help="number of training epochs in each iteration", type=int, default=2
 )
+parser.add_argument("--random_seed", help="manual random seed", type=int, default=0)
+
 
 # Strategy
 parser.add_argument(
