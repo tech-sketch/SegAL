@@ -16,7 +16,7 @@ import torch
 from albumentations import BaseCompose
 
 from segal import strategies, utils
-from segal.datasets import CamvidDataset, VOCDataset, CityscapesDataset
+from segal.datasets import CamvidDataset, CityscapesDataset, VOCDataset
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -108,7 +108,7 @@ elif DATASET == "VOC":
     if not os.path.exists(data_dir):
         os.mkdir(data_dir)
 
-    # If "./data/VOC2012_trainval" not exist, donwload tar file
+    # If "./data/VOC2012_trainval" not exist, download tar file
     if not os.path.exists(DATA_DIR):
         print("Loading data...")
         trainval_dir = "VOC2012_trainval"
@@ -201,14 +201,50 @@ elif DATASET == "CityScapes":
     images_dir = os.path.join(DATA_DIR, "leftImg8bit")
     labels_dir = os.path.join(DATA_DIR, "gtFine")
 
-    pool_images = sorted(glob(os.path.join(os.path.join(DATA_DIR, "leftImg8bit/train"), "*/*_leftImg8bit.png")))
-    pool_labels = sorted(glob(os.path.join(os.path.join(DATA_DIR, "gtFine/train"), "*/*_gtFine_labelIds.png")))
+    pool_images = sorted(
+        glob(
+            os.path.join(
+                os.path.join(DATA_DIR, "leftImg8bit/train"), "*/*_leftImg8bit.png"
+            )
+        )
+    )
+    pool_labels = sorted(
+        glob(
+            os.path.join(
+                os.path.join(DATA_DIR, "gtFine/train"), "*/*_gtFine_labelIds.png"
+            )
+        )
+    )
 
-    val_images = sorted(glob(os.path.join(os.path.join(DATA_DIR, "leftImg8bit/val"), "*/*_leftImg8bit.png")))
-    val_labels = sorted(glob(os.path.join(os.path.join(DATA_DIR, "gtFine/val"), "*/*_gtFine_labelIds.png")))
+    val_images = sorted(
+        glob(
+            os.path.join(
+                os.path.join(DATA_DIR, "leftImg8bit/val"), "*/*_leftImg8bit.png"
+            )
+        )
+    )
+    val_labels = sorted(
+        glob(
+            os.path.join(
+                os.path.join(DATA_DIR, "gtFine/val"), "*/*_gtFine_labelIds.png"
+            )
+        )
+    )
 
-    test_images = sorted(glob(os.path.join(os.path.join(DATA_DIR, "leftImg8bit/test"), "*/*_leftImg8bit.png")))
-    test_labels = sorted(glob(os.path.join(os.path.join(DATA_DIR, "gtFine/test"), "*/*_gtFine_labelIds.png")))
+    test_images = sorted(
+        glob(
+            os.path.join(
+                os.path.join(DATA_DIR, "leftImg8bit/test"), "*/*_leftImg8bit.png"
+            )
+        )
+    )
+    test_labels = sorted(
+        glob(
+            os.path.join(
+                os.path.join(DATA_DIR, "gtFine/test"), "*/*_gtFine_labelIds.png"
+            )
+        )
+    )
 
     # Test on small data
     # pool_images = pool_images[:16]
