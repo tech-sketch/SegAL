@@ -16,7 +16,7 @@ class LeastConfidence(Strategy):
         val_labels (List[str]): List of validation label paths.
         test_images (List[str]): List of test image paths.
         test_labels (List[str]): List of test label paths.
-        idxs_lb (List[bool]): List of bool type to record labeled data.
+        idxs_lb (np.ndarray): Array of bool type to record labeled data.
         model_params (dict): Model parameters.
                             e.g. model_params = {
                                     "MODEL_NAME": MODEL_NAME,
@@ -80,7 +80,15 @@ class LeastConfidence(Strategy):
 
     @staticmethod
     def get_topk_idxs(scores: np.ndarray, k: int) -> np.ndarray:
-        """Get top k indices."""
+        """Get top k indices.
+
+        Args:
+            scores (np.ndarray): scores of batch data
+            k (int): num of data to query
+
+        Returns:
+            np.ndarray: index of queried data
+        """
         if isinstance(scores, list):
             scores = np.array(scores)
         return scores.argsort()[::-1][:k]

@@ -15,12 +15,11 @@ class CityscapesDataset(Dataset):
     Args:
         image_paths (List[str]): path to images
         mask_paths (List[str]): path to segmentation masks
-        class_values (list): values of classes to extract from segmentation mask
+        class_values (Optional[List[str]]): values of classes to extract from segmentation mask
         augmentation (albumentations.Compose): data transformation pipeline
             (e.g. flip, scale, etc.)
         preprocessing (albumentations.Compose): data preprocessing
             (e.g. noralization, shape manipulation, etc.)
-
     """
 
     mapping = {
@@ -145,7 +144,14 @@ class CityscapesDataset(Dataset):
         return len(self.image_paths)
 
     def encode_labels(self, mask: np.ndarray) -> np.ndarray:
-        """Convert 33 classes to 20 classes"""
+        """Convert 33 classes to 20 classes
+
+        Args:
+            mask (np.ndarray): mask with 33 classes id
+
+        Returns:
+            np.ndarray: mask with 20 classes id
+        """
         label_mask = np.zeros_like(mask)
         for k in self.mapping:
             label_mask[mask == k] = self.mapping[k]

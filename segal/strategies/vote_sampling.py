@@ -17,7 +17,7 @@ class VoteSampling(Strategy):
         val_labels (List[str]): List of validation label paths.
         test_images (List[str]): List of test image paths.
         test_labels (List[str]): List of test label paths.
-        idxs_lb (List[bool]): List of bool type to record labeled data.
+        idxs_lb (np.ndarray): Array of bool type to record labeled data.
         model_params (dict): Model parameters.
                             e.g. model_params = {
                                     "MODEL_NAME": MODEL_NAME,
@@ -81,17 +81,26 @@ class VoteSampling(Strategy):
 
     @staticmethod
     def get_topk_idxs(scores: np.ndarray, k: int) -> np.ndarray:
-        """Get top k indices."""
+        """Get top k indices.
+
+        Args:
+            scores (np.ndarray): scores of batch data
+            k (int): num of data to query
+
+        Returns:
+            np.ndarray: index of queried data
+        """
         return scores.argsort()[::-1][:k]
 
     def cal_scores(self, probs: np.ndarray, steps: int = 20) -> np.ndarray:  # B,C,H,W
         """Calculate score by probability.
 
         Args:
-            probs (np.array): Probability.
+            probs (np.ndarray): probability
+            steps (int, optional): num of steps. Defaults to 20.
 
         Returns:
-            np.array: Image score.
+            np.ndarray: scores
         """
         num_classes = self.model_params["NUM_CLASSES"]
         outputs = torch.FloatTensor(

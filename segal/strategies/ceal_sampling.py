@@ -10,20 +10,21 @@ from .strategy import Strategy
 
 
 def get_uncertain_samples_idxs(probs: np.ndarray, n: int, criteria: str) -> np.ndarray:
-    """
-    Get the K most informative samples based on the criteria
-    Parameters
-    ----------
-    probs : np.ndarray
-        prediction probability of x_i with dimension (batch x n_class)
-    n: int
-    criteria: str
-        `lc` : least_confidence
-        `ms` : margin_sampling
-        `en` : entropy
-    Returns
-    -------
-    tuple(np.ndarray, np.ndarray)
+    """Get the K most informative samples based on the criteria
+
+    Args:
+        probs (np.ndarray): prediction probability, (B,C,H,W)
+        n (int): num of data to query
+        criteria (str): calculation method,
+                        `lc`: LeastConfidence,
+                        `ms`: MarginSampling,
+                        `en`: EntropySampling,
+
+    Raises:
+        ValueError: if criteria is not available
+
+    Returns:
+        np.ndarray: index of queried data
     """
     if criteria == "lc":
         scores = LeastConfidence.cal_scores(probs)
@@ -42,22 +43,15 @@ def get_uncertain_samples_idxs(probs: np.ndarray, n: int, criteria: str) -> np.n
 def get_high_confidence_samples(
     probs: np.ndarray, delta: float, k: int
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Select high confidence samples from `D^U` whose entropy is smaller than
-     the threshold
-    `delta`.
-    Parameters
-    ----------
-    probs : np.ndarray
-        prediction probability of x_i with dimension (batch x n_class)
-    delta : float
-        threshold
-    Returns
-    -------
-    np.array with dimension (K x 1)  containing the indices of the K
-        most informative samples.
-    np.array with dimension (K x 1) containing the predicted classes of the
-        k most informative samples
+    """Select high confidence samples from unlabled data whose entropy is smaller than the threshold
+
+    Args:
+        probs (np.ndarray): prediction probability, (B,C,H,W)
+        delta (float): threshold
+        k (int): num of data to query
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: index of queried data, mask
     """
     scores, entropy_maps = CealSampling.cal_scores(probs)
     topk_idxs = CealSampling.get_topk_idxs(scores, k)
@@ -67,8 +61,8 @@ def get_high_confidence_samples(
         qualified_area = entropy_map <= delta
         if np.any(qualified_area):
             pred_class[idx][qualified_area is False] = 255
-    labels = pred_class[topk_idxs]
-    return topk_idxs, labels
+    mask = pred_class[topk_idxs]
+    return topk_idxs, mask
 
 
 class CealSampling(Strategy):
@@ -81,7 +75,7 @@ class CealSampling(Strategy):
         val_labels (List[str]): List of validation label paths.
         test_images (List[str]): List of test image paths.
         test_labels (List[str]): List of test label paths.
-        idxs_lb (List[bool]): List of bool type to record labeled data.
+        idxs_lb (np.ndarray): Array of bool type to record labeled data.
         model_params (dict): Model parameters.
                             e.g. model_params = {
                                     "MODEL_NAME": MODEL_NAME,
@@ -134,8 +128,11 @@ class CealSampling(Strategy):
         """Query data.
 
         Args:
-            n (int): Number of data to query.
-
+            n (int): number of data to query.
+            criteria (str): calculation method,
+                            `lc`: LeastConfidence,
+                            `ms`: MarginSampling,
+                            `en`: EntropySampling,
         Returns:
             List[int]: Indices of queried data.
         """
@@ -155,7 +152,15 @@ class CealSampling(Strategy):
 
     @staticmethod
     def get_topk_idxs(scores: np.ndarray, k: int) -> np.ndarray:
-        """Get top k indices."""
+        """Get top k indices.
+
+        Args:
+            scores (np.ndarray): scores of batch data
+            k (int): num of data to query
+
+        Returns:
+            np.ndarray: index of queried data
+        """
         if isinstance(scores, list):
             scores = np.array(scores)
         return scores.argsort()[::-1][:k]
@@ -165,10 +170,10 @@ class CealSampling(Strategy):
         """Calculate score by probability.
 
         Args:
-            probs (np.ndarray): Probability.
+            probs (np.ndarray): prediction probability
 
         Returns:
-            np.ndarray: Image score.
+            Tuple[np.ndarray, dict]: scores of images, entropy map
         """
         scores = []
         entropy_maps = {}

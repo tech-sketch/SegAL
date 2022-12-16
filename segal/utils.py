@@ -4,16 +4,30 @@ from typing import Any, List
 import numpy as np
 
 
-def is_list_of_strings(lst):
-    """Check if a list only contains strings"""
+def is_list_of_strings(lst: List[str]) -> bool:
+    """Check if a list only contains strings
+
+    Args:
+        lst (List[str]): a list
+
+    Returns:
+        bool: if all element is string, return True, otherwise return False
+    """
     if lst and isinstance(lst, list):
         return all(isinstance(elem, str) for elem in lst)
     else:
         return False
 
 
-def is_array_of_bools(array):
-    """Check if a list only contains strings"""
+def is_array_of_bools(array: np.ndarray) -> bool:
+    """Check if a array only contains bool
+
+    Args:
+        array (np.ndarray): numpy array
+
+    Returns:
+        bool: if all element types are bool, return True, otherwise return False
+    """
     if isinstance(array, np.ndarray) and len(list(array)) != []:
         return all(type(elem) != bool for elem in array)
     else:

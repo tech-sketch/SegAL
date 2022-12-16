@@ -21,7 +21,8 @@ class Strategy:
         val_labels (List[str]): List of validation label paths.
         test_images (List[str]): List of test image paths.
         test_labels (List[str]): List of test label paths.
-        idxs_lb (List[bool]): List of bool type to record labeled data.
+        idxs_lb (np.ndarray): Array of bool type to record labeled data.
+        model_params (dict): Model parameters.
         model_params (dict): Model parameters.
         dataset (Dataset): Dataset class.
         dataset_params (dict): Dataset parameters.
@@ -29,7 +30,6 @@ class Strategy:
         test_dataset (Union[Dataset, None]): Validation dataset.
         n_pool (int): Number of pool data.
         device (str): "cuda" or "cpu".
-        model_params (dict): Model parameters.
         best_model (torch.nn.Module): Segmentation model.
         train_logs (List[dict]): List of training logs.
         val_logs (List[dict]): List of validation logs.
@@ -58,7 +58,7 @@ class Strategy:
             val_labels (List[str]): List of validation label paths.
             test_images (List[str]): List of test image paths.
             test_labels (List[str]): List of test label paths.
-            idxs_lb (np.ndarray): List of bool type to record labeled data.
+            idxs_lb (np.ndarray): Array of bool type to record labeled data.
             model_params (dict): Model parameters.
                                 e.g. model_params = {
                                         "MODEL_NAME": MODEL_NAME,
@@ -114,11 +114,22 @@ class Strategy:
         self.test_logs: List[dict] = []
 
     def query(self, n: int) -> List[int]:
-        """Query data."""
+        """Query data
+
+        Args:
+            n (int): num of query data
+
+        Returns:
+            List[int]: index of query data
+        """
         pass
 
     def update(self, idxs_lb: np.ndarray) -> None:
-        """Update labeled data index"""
+        """Update labeled data index
+
+        Args:
+            idxs_lb (np.ndarray): array of bool type to record labeled data.
+        """
         self.idxs_lb = idxs_lb
 
     def train(
@@ -127,7 +138,16 @@ class Strategy:
         activation: str = "softmax2d",
         save_path: str = "output",
     ) -> dict:
-        """Train model and return performance on test data"""
+        """Train model and return performance on test data
+
+        Args:
+            n_epoch (int, optional): num of epochs. Defaults to 10.
+            activation (str, optional): activation function. Defaults to "softmax2d".
+            save_path (str, optional): save path of result. Defaults to "output".
+
+        Returns:
+            dict: a dict with log of performance
+        """
         model = smp.__dict__[self.model_params["MODEL_NAME"]](
             encoder_name=self.model_params["ENCODER"],
             encoder_weights=self.model_params["ENCODER_WEIGHTS"],
@@ -225,6 +245,12 @@ class Strategy:
     def evaluate(
         self, activation: str = "softmax2d", check_point: Optional[str] = None
     ):
+        """Evaluate on dataset
+
+        Args:
+            activation (str, optional): activation function. Defaults to "softmax2d".
+            check_point (Optional[str], optional): saved model. Defaults to None.
+        """
         loss = utils.losses.DiceLoss(activation=activation)
         metrics = [
             utils.metrics.IoU(threshold=0.5, activation=activation),
