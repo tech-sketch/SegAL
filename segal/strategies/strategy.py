@@ -169,7 +169,7 @@ class Strategy:
             train_labels,
             augmentation=self.dataset_params["training_augmentation"],
             preprocessing=self.dataset_params["preprocessing"],
-            classes=self.dataset_params["classes"],
+            class_values=self.dataset_params["class_values"],
         )  # type: ignore[operator]
 
         if self.val_dataset is None:
@@ -178,7 +178,7 @@ class Strategy:
                 self.val_labels,
                 augmentation=self.dataset_params["validation_augmentation"],
                 preprocessing=self.dataset_params["preprocessing"],
-                classes=self.dataset_params["classes"],
+                class_values=self.dataset_params["class_values"],
             )  # type: ignore[operator]
             self.valid_dataset = valid_dataset
         else:
@@ -267,7 +267,7 @@ class Strategy:
                 self.test_labels,
                 augmentation=self.dataset_params["validation_augmentation"],
                 preprocessing=self.dataset_params["preprocessing"],
-                classes=self.dataset_params["classes"],
+                class_values=self.dataset_params["class_values"],
             )  # type: ignore[operator]
             self.test_dataset = test_dataset
         else:
@@ -306,7 +306,7 @@ class Strategy:
             unlabeled_labels,
             augmentation=self.dataset_params["validation_augmentation"],
             preprocessing=self.dataset_params["preprocessing"],
-            classes=self.dataset_params["classes"],
+            class_values=self.dataset_params["class_values"],
         )  # type: ignore[operator]
 
         if self.device == "cuda":

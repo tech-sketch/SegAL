@@ -4,12 +4,13 @@ import cv2
 import numpy as np
 from albumentations import BaseCompose
 from torch import Tensor
+from torch.utils.data import Dataset
 
-from segal.datasets.base_dataset import BaseDataset
+from segal.utils import is_list_of_int, is_list_of_strings
 
 
-class CityscapesDataset(BaseDataset):
-    """Cityscapes Dataset.
+class BaseDataset(Dataset):
+    """Base dataset. Read images, apply augmentation and preprocessing transformations.
 
     Args:
         image_paths (List[str]): path to images
@@ -21,68 +22,6 @@ class CityscapesDataset(BaseDataset):
             (e.g. noralization, shape manipulation, etc.)
     """
 
-    mapping = {
-        0: 0,
-        1: 0,
-        2: 0,
-        3: 0,
-        4: 0,
-        5: 0,
-        6: 0,
-        7: 1,
-        8: 2,
-        9: 0,
-        10: 0,
-        11: 3,
-        12: 4,
-        13: 5,
-        14: 0,
-        15: 0,
-        16: 0,
-        17: 6,
-        18: 0,
-        19: 7,
-        20: 8,
-        21: 9,
-        22: 10,
-        23: 11,
-        24: 12,
-        25: 13,
-        26: 14,
-        27: 15,
-        28: 16,
-        29: 0,
-        30: 0,
-        31: 17,
-        32: 18,
-        33: 19,
-        -1: 0,
-    }
-
-    # The values above are remapped to the following
-    CLASSES = [
-        "unlabeled",
-        "road",
-        "sidewalk",
-        "building",
-        "wall",
-        "fence",
-        "pole",
-        "traffic_light",
-        "traffic_sign",
-        "vegetation",
-        "terrain",
-        "sky",
-        "person",
-        "rider",
-        "car",
-        "truck",
-        "bus",
-        "train",
-        "motorcycle",
-        "bicycle",
-    ]
-
     def __init__(
         self,
         image_paths: List[str],
@@ -91,13 +30,15 @@ class CityscapesDataset(BaseDataset):
         augmentation: Optional[BaseCompose] = None,
         preprocessing: Optional[BaseCompose] = None,
     ):
-        super(CityscapesDataset, self).__init__(
-            image_paths,
-            mask_paths,
-            class_values,
-            augmentation,
-            preprocessing,
-        )
+        if not all([is_list_of_strings(image_paths), is_list_of_strings(mask_paths)]):
+            raise TypeError("Images paths must be a list of string!")
+        if not is_list_of_int(class_values):
+            raise TypeError("classes must be a numpy array!")
+        self.image_paths = image_paths
+        self.mask_paths = mask_paths
+        self.class_values = class_values
+        self.augmentation = augmentation
+        self.preprocessing = preprocessing
 
     def __getitem__(self, i) -> Tuple[Tensor, Tensor]:
         """Get data by index.
@@ -114,8 +55,6 @@ class CityscapesDataset(BaseDataset):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB, 0~1
         mask = cv2.imread(self.mask_paths[i], 0)
 
-        # Remap label
-        mask = self.encode_labels(mask)
         # extract certain classes from mask (e.g. cars)
         masks = [(mask == v) for v in self.class_values]
         mask = np.stack(masks, axis=-1).astype("float")
@@ -132,16 +71,10 @@ class CityscapesDataset(BaseDataset):
 
         return image, mask
 
-    def encode_labels(self, mask: np.ndarray) -> np.ndarray:
-        """Convert 33 classes to 20 classes
-
-        Args:
-            mask (np.ndarray): mask with 33 classes id
+    def __len__(self) -> int:
+        """return size of dataset.
 
         Returns:
-            np.ndarray: mask with 20 classes id
+            int: size of dataset.
         """
-        label_mask = np.zeros_like(mask)
-        for k in self.mapping:
-            label_mask[mask == k] = self.mapping[k]
-        return label_mask
+        return len(self.image_paths)

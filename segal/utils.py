@@ -19,6 +19,21 @@ def is_list_of_strings(lst: List[str]) -> bool:
         return False
 
 
+def is_list_of_int(lst: List[int]) -> bool:
+    """Check if a list only contains int
+
+    Args:
+        lst (List[int]): a list
+
+    Returns:
+        bool: if all element is int, return True, otherwise return False
+    """
+    if lst and isinstance(lst, list):
+        return all(isinstance(elem, int) for elem in lst)
+    else:
+        return False
+
+
 def is_array_of_bools(array: np.ndarray) -> bool:
     """Check if a array only contains bool
 

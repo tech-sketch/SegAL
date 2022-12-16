@@ -9,9 +9,13 @@ def dataset(fixture_image_paths, scope="function"):
     """Dataset instance"""
     image_paths = [fixture_image_paths[0]]
     mask_paths = [fixture_image_paths[1]]
-    classes = ["car"]
+    class_values = [8]
     dataset = CamvidDataset(
-        image_paths, mask_paths, classes=classes, preprocessing=None, augmentation=None
+        image_paths,
+        mask_paths,
+        class_values=class_values,
+        preprocessing=None,
+        augmentation=None,
     )
     return dataset
 

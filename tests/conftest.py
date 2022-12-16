@@ -25,22 +25,7 @@ def processed_images(fixture_image_paths) -> Path:
     image = cv2.imread(fixture_image_paths[0])
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    CLASSES = [
-        "sky",
-        "building",
-        "pole",
-        "road",
-        "pavement",
-        "tree",
-        "signsymbol",
-        "fence",
-        "car",
-        "pedestrian",
-        "bicyclist",
-        "unlabelled",
-    ]
-    classes = ["car"]
-    class_values = [CLASSES.index(cls.lower()) for cls in classes]
+    class_values = [8]
     mask = cv2.imread(fixture_image_paths[1], 0)
     masks = [(mask == v) for v in class_values]
     mask = np.stack(masks, axis=-1).astype("float")
@@ -90,34 +75,9 @@ def processed_images_cityscapes(fixture_image_paths) -> Path:
     }
 
     # The values above are remapped to the following
-    CLASSES = [
-        "unlabeled",
-        "road",
-        "sidewalk",
-        "building",
-        "wall",
-        "fence",
-        "pole",
-        "traffic_light",
-        "traffic_sign",
-        "vegetation",
-        "terrain",
-        "sky",
-        "person",
-        "rider",
-        "car",
-        "truck",
-        "bus",
-        "train",
-        "motorcycle",
-        "bicycle",
-    ]
-
     image = cv2.imread(fixture_image_paths[0])
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    classes = ["car"]
-    class_values = [CLASSES.index(cls.lower()) for cls in classes]
+    class_values = [8]
 
     mask = cv2.imread(fixture_image_paths[1], 0)
     label_mask = np.zeros_like(mask)
