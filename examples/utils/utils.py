@@ -1,5 +1,4 @@
-import json
-from typing import Any, List
+from typing import List
 
 import matplotlib.pyplot as plt
 
