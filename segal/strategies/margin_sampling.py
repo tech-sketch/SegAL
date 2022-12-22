@@ -16,7 +16,7 @@ class MarginSampling(Strategy):
         val_labels (List[str]): List of validation label paths.
         test_images (List[str]): List of test image paths.
         test_labels (List[str]): List of test label paths.
-        idxs_lb (List[bool]): List of bool type to record labeled data.
+        idxs_lb (np.ndarray): Array of bool type to record labeled data.
         model_params (dict): Model parameters.
                             e.g. model_params = {
                                     "MODEL_NAME": MODEL_NAME,
@@ -42,7 +42,7 @@ class MarginSampling(Strategy):
         val_labels: List[str],
         test_images: List[str],
         test_labels: List[str],
-        idxs_lb: List[bool],
+        idxs_lb: np.ndarray,
         model_params: dict,
         dataset: Dataset,
         dataset_params: dict,
@@ -59,12 +59,6 @@ class MarginSampling(Strategy):
             dataset,
             dataset_params,
         )
-
-    def get_topk_idxs(self, scores: np.array, k: int) -> List[int]:
-        """Get top k indices."""
-        if isinstance(scores, list):
-            scores = np.array(scores)
-        return scores.argsort()[::-1][:k]
 
     def query(self, n: int) -> List[int]:
         """Query data.
@@ -85,14 +79,29 @@ class MarginSampling(Strategy):
         return idxs_queried
 
     @staticmethod
-    def cal_scores(probs: np.array) -> np.array:  # B,C,H,W
+    def get_topk_idxs(scores: np.ndarray, k: int) -> np.ndarray:
+        """Get top k indices.
+
+        Args:
+            scores (np.ndarray): scores of batch data
+            k (int): num of data to query
+
+        Returns:
+            np.ndarray: index of queried data
+        """
+        if isinstance(scores, list):
+            scores = np.array(scores)
+        return scores.argsort()[::-1][:k]
+
+    @staticmethod
+    def cal_scores(probs: np.ndarray) -> np.ndarray:  # B,C,H,W
         """Calculate score by probability.
 
         Args:
-            probs (np.array): Probability.
+            probs (np.ndarray): Probability.
 
         Returns:
-            np.array: Image score.
+            np.ndarray: Image score.
         """
         scores = []
         for prob in probs:
@@ -102,7 +111,7 @@ class MarginSampling(Strategy):
             margin = most_confident_scores - second_most_confident_scores
             scores.append(np.mean(margin))
 
-        scores = (
+        return_scores = (
             np.array(scores) * -1
         )  # the smaller the better (margin is low) -> Reverse it makes the larger the better
-        return scores
+        return return_scores

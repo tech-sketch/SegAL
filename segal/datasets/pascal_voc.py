@@ -5,8 +5,8 @@ from albumentations import BaseCompose
 from segal.datasets.base_dataset import BaseDataset
 
 
-class CamvidDataset(BaseDataset):
-    """CamVid Dataset. Read images, apply augmentation and preprocessing transformations.
+class VOCDataset(BaseDataset):
+    """VOCDataset Dataset.
 
     Args:
         image_paths (List[str]): path to images
@@ -19,18 +19,27 @@ class CamvidDataset(BaseDataset):
     """
 
     CLASSES = [
-        "sky",
-        "building",
-        "pole",
-        "road",
-        "pavement",
-        "tree",
-        "signsymbol",
-        "fence",
+        "background",
+        "aeroplane",
+        "bicycle",
+        "bird",
+        "boad",
+        "bottle",
+        "bus",
+        "cat",
         "car",
-        "pedestrian",
-        "bicyclist",
-        "unlabelled",
+        "chair",
+        "cow",
+        "dining table",
+        "dog",
+        "horse",
+        "motor bike",
+        "person",
+        "potted plant",
+        "sheep",
+        "sofa",
+        "train",
+        "tv/monitor",
     ]
 
     def __init__(
@@ -41,7 +50,7 @@ class CamvidDataset(BaseDataset):
         augmentation: Optional[BaseCompose] = None,
         preprocessing: Optional[BaseCompose] = None,
     ):
-        super(CamvidDataset, self).__init__(
+        super(VOCDataset, self).__init__(
             image_paths,
             mask_paths,
             class_values,

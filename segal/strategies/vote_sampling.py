@@ -1,13 +1,14 @@
 from typing import List
 
 import numpy as np
+import torch
 from torch.utils.data import Dataset
 
 from .strategy import Strategy
 
 
-class LeastConfidence(Strategy):
-    """Least Confidence Class.
+class VoteSampling(Strategy):
+    """Vote Sampling Class.
 
     Args:
         pool_images (List[str]): List of pool image paths.
@@ -47,7 +48,7 @@ class LeastConfidence(Strategy):
         dataset: Dataset,
         dataset_params: dict,
     ):
-        super(LeastConfidence, self).__init__(
+        super(VoteSampling, self).__init__(
             pool_images,
             pool_labels,
             val_images,
@@ -89,25 +90,36 @@ class LeastConfidence(Strategy):
         Returns:
             np.ndarray: index of queried data
         """
-        if isinstance(scores, list):
-            scores = np.array(scores)
         return scores.argsort()[::-1][:k]
 
-    @staticmethod
-    def cal_scores(probs: np.ndarray) -> np.ndarray:  # B,C,H,W
+    def cal_scores(self, probs: np.ndarray, steps: int = 20) -> np.ndarray:  # B,C,H,W
         """Calculate score by probability.
 
         Args:
-            probs (np.array): Probability.
+            probs (np.ndarray): probability
+            steps (int, optional): num of steps. Defaults to 20.
 
         Returns:
-            np.array: Image score.
+            np.ndarray: scores
         """
+        num_classes = self.model_params["NUM_CLASSES"]
+        outputs = torch.FloatTensor(
+            probs.shape[0], num_classes, probs.shape[2], probs.shape[3]
+        ).fill_(0)
+
+        with torch.no_grad():
+            for _ in range(steps):
+                outputs[:, :, :, :] += probs
+
+        outputs /= steps
         scores = []
-        max_conf = np.max(probs, axis=1)
-        for conf in max_conf:
-            scores.append(np.mean(conf))
-        return_scores = (
-            np.array(scores) * -1
-        )  # the smaller the better (confidence is low) -> Reverse it makes the larger the better
-        return return_scores
+        for i in range(probs.shape[0]):
+            entropy_map = torch.FloatTensor(probs.shape[2], probs.shape[3]).fill_(0)
+            for c in range(num_classes):
+                entropy_map = entropy_map - (
+                    outputs[i, c, :, :] * torch.log2(outputs[i, c, :, :] + 1e-12)
+                )
+            score = np.mean(-np.nansum(entropy_map.cpu().numpy(), axis=0))
+            scores.append(score)
+
+        return np.array(scores)

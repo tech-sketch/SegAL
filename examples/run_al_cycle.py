@@ -1,34 +1,23 @@
 import argparse
 import math
-import os
 import random
-import ssl
 from datetime import datetime
-from glob import glob
 
 import numpy as np
-import segmentation_models_pytorch as smp
 import torch
+from utils import dataset_prepare
 
 from segal import strategies, utils
-from segal.datasets.camvid import (
-    CamvidDataset,
-    get_preprocessing,
-    get_training_augmentation,
-    get_validation_augmentation,
-)
 
-ssl._create_default_https_context = ssl._create_unverified_context
-
-###############################################################################
 parser = argparse.ArgumentParser()
 # Dataset
 parser.add_argument("--dataset", help="dataset", type=str, default="CamVid")
 parser.add_argument("--data_path", help="data path", type=str, default="./data/CamVid/")
+parser.add_argument("--crop_size", help="crop size", type=int, default=512)
 
 # Model
 parser.add_argument(
-    "--model_name", help="model - FPN, Unet, DeepLabV3", type=str, default="Unet"
+    "--model_name", help="model - FPN, Unet, DeepLabV3Plus", type=str, default="Unet"
 )
 parser.add_argument(
     "--encoder",
@@ -40,9 +29,6 @@ parser.add_argument(
     "--encoder_weights", help="encoder weights - imagenet", type=str, default="imagenet"
 )
 parser.add_argument("--num_classes", help="number of classes", type=int, default=12)
-
-# Mode
-parser.add_argument("--full", help="train model on full data", type=bool, default=False)
 
 # Active Learning Setup
 parser.add_argument(
@@ -64,6 +50,9 @@ parser.add_argument(
     default="RandomSampling",
 )
 
+# Mode
+parser.add_argument("--full", help="train model on full data", action="store_true")
+
 args = parser.parse_args()
 
 
@@ -83,23 +72,29 @@ if torch.cuda.is_available():
 # Get data
 DATASET = args.dataset
 DATA_DIR = args.data_path
-
+FULL_MODE = args.full
 # load repo with data if it is not exists
-if DATASET == "CamVid" and not os.path.exists(DATA_DIR):
-    print("Loading data...")
-    os.system("git clone https://github.com/alexgkendall/SegNet-Tutorial ./data")
-    print("Done!")
+(
+    pool_images,
+    pool_labels,
+    val_images,
+    val_labels,
+    test_images,
+    test_labels,
+) = dataset_prepare.get_paths(DATASET, DATA_DIR, FULL_MODE)
 
+# Test on small data
+# pool_images = pool_images[:16]
+# pool_labels = pool_labels[:16]
+# val_images = val_images[:4]
+# val_labels = val_labels[:4]
+# test_images = test_images[:4]
+# test_labels = test_labels[:4]
 
-# Load data paths
-pool_images = sorted(glob(os.path.join(DATA_DIR, "train/*")))
-pool_labels = sorted(glob(os.path.join(DATA_DIR, "trainannot/*")))
-
-val_images = sorted(glob(os.path.join(DATA_DIR, "val/*")))
-val_labels = sorted(glob(os.path.join(DATA_DIR, "valannot/*")))
-
-test_images = sorted(glob(os.path.join(DATA_DIR, "test/*")))
-test_labels = sorted(glob(os.path.join(DATA_DIR, "testannot/*")))
+# Output size of dataset
+print(f"Number of training data: {len(pool_images)}")
+print(f"Number of val data: {len(val_images)}")
+print(f"Number of test data: {len(test_images)}")
 
 # Calculate NUM_INIT_LB, NUM_QUERY, NUM_ROUND
 if args.full:
@@ -132,15 +127,11 @@ model_params = {
 print(f"Model setup: {model_params}")
 
 
-# if dataset is CamVid
-if DATASET == "CamVid":
-    preprocessing_fn = smp.encoders.get_preprocessing_fn(ENCODER, ENCODER_WEIGHTS)
-    dataset_params = {
-        "training_augmentation": get_training_augmentation(),
-        "validation_augmentation": get_validation_augmentation(),
-        "preprocessing": get_preprocessing(preprocessing_fn),
-        "classes": CamvidDataset.CLASSES,
-    }
+# Prepare augmentation and preprocess methods
+CROP_SIZE = args.crop_size
+dataset_params, DatasetClass = dataset_prepare.get_dataset(
+    DATASET, ENCODER, ENCODER_WEIGHTS, CROP_SIZE
+)
 
 # Set up index recorder
 n_pool = len(pool_images)
@@ -148,6 +139,7 @@ idxs_lb = np.zeros(n_pool, dtype=bool)  # number of labeled image index
 idxs_tmp = np.arange(n_pool)
 np.random.shuffle(idxs_tmp)
 idxs_lb[idxs_tmp[:NUM_INIT_LB]] = True
+
 
 strategy_name = args.strategy
 strategy = strategies.__dict__[strategy_name](
@@ -159,58 +151,72 @@ strategy = strategies.__dict__[strategy_name](
     test_labels,
     idxs_lb,
     model_params,
-    CamvidDataset,
+    DatasetClass,
     dataset_params,
 )
 
 time_start = datetime.now()
-
-print("Round 0: initialize model")
 n_epoch = args.n_epoch
-test_performance = strategy.train(n_epoch)
-print(test_performance)
 
-if args.full:
+if args.full is True and DATASET == "VOC":
+    print("Train on full training data")
+    val_performance = strategy.train(n_epoch)
+    print(f"val_performance: {val_performance}")
+    save_path = f"./output/{DATASET}_{MODEL_NAME}_epoch_{n_epoch}_{ENCODER}_full_val_result.json"
+    utils.save_json(val_performance, save_path)
+
+elif args.full is True and DATASET != "VOC":
+    print("Train on full training data")
+    val_performance = strategy.train(n_epoch)
+    test_performance = strategy.evaluate()
+    print(f"test_performance: {test_performance}")
     save_path = f"./output/{DATASET}_{MODEL_NAME}_epoch_{n_epoch}_{ENCODER}_full_test_result.json"
     utils.save_json(test_performance, save_path)
 
+else:
+    print("Round 0: initialize model")
+    val_performance = strategy.train(n_epoch)
+    test_performance = strategy.evaluate()
+    print(f"test_performance: {test_performance}")
 
-for round in range(1, NUM_ROUND + 1):
-    time_round_start = datetime.now()
+    # Active Learning Cycle
+    for round in range(1, NUM_ROUND + 1):
+        time_round_start = datetime.now()
 
-    print(f"Round: {round}")
-    labeled = len(np.arange(n_pool)[idxs_lb])  # Mark the index of seed data as labeled
-    print(f"Number of labeled data: {labeled}")
-    print(f"Rest of unlabeled data: {n_pool - labeled}")
-    if NUM_QUERY > n_pool - labeled:
-        NUM_QUERY = n_pool - labeled
-    print(f"Number of queried data in this round: {NUM_QUERY}")
+        print(f"Round: {round}")
+        labeled = len(
+            np.arange(n_pool)[idxs_lb]
+        )  # Mark the index of seed data as labeled
+        print(f"Number of labeled data: {labeled}")
+        print(f"Rest of unlabeled data: {n_pool - labeled}")
+        if NUM_QUERY > n_pool - labeled:
+            NUM_QUERY = n_pool - labeled
+        print(f"Number of queried data in this round: {NUM_QUERY}")
 
-    idxs_queried = strategy.query(NUM_QUERY)
-    idxs_lb[idxs_queried] = True
+        idxs_queried = strategy.query(NUM_QUERY)
+        idxs_lb[idxs_queried] = True
 
-    # update labeled data
-    strategy.update(idxs_lb)
-    print(f"Number of updated labeled data: {sum(idxs_lb)}")
+        # update labeled data
+        strategy.update(idxs_lb)
+        print(f"Number of updated labeled data: {sum(idxs_lb)}")
 
-    # retrain model
-    print("Retrain model:")
-    test_performance = strategy.train(n_epoch)
-    print(test_performance)
+        # retrain model
+        print("Retrain model:")
+        test_performance = strategy.train(n_epoch)
+        print(test_performance)
 
-    time_round_end = datetime.now() - time_round_start
-    print(f"This round take {time_round_end}")
-    print()
-    print()
+        time_round_end = datetime.now() - time_round_start
+        print(f"This round takes {time_round_end}")
+        print()
+        print()
 
-time_end = datetime.now() - time_start
-print(f"All rounds take {time_end}")
+    time_end = datetime.now() - time_start
+    print(f"All rounds take {time_end}")
 
-for round, round_log in enumerate(strategy.test_logs):
-    print(
-        f'Round: {round}, dice loss: {round_log["dice_loss"]}, mIoU: {round_log["iou_score"]}'
-    )
+    for round, round_log in enumerate(strategy.test_logs):
+        print(
+            f'Round: {round}, dice loss: {round_log["dice_loss"]}, mIoU: {round_log["iou_score"]}'
+        )
 
-if not args.full:
     save_path = f"./output/{DATASET}_{MODEL_NAME}_{ENCODER}_{strategy_name}_epochs_{n_epoch}_test_result.json"
     utils.save_json(strategy.test_logs, save_path)

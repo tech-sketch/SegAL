@@ -16,7 +16,7 @@ class RandomSampling(Strategy):
         val_labels (List[str]): List of validation label paths.
         test_images (List[str]): List of test image paths.
         test_labels (List[str]): List of test label paths.
-        idxs_lb (List[bool]): List of bool type to record labeled data.
+        idxs_lb (np.ndarray): Array of bool type to record labeled data.
         model_params (dict): Model parameters.
                             e.g. model_params = {
                                     "MODEL_NAME": MODEL_NAME,
@@ -42,7 +42,7 @@ class RandomSampling(Strategy):
         val_labels: List[str],
         test_images: List[str],
         test_labels: List[str],
-        idxs_lb: List[bool],
+        idxs_lb: np.ndarray,
         model_params: dict,
         dataset: Dataset,
         dataset_params: dict,

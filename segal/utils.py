@@ -1,66 +1,52 @@
 import json
 from typing import Any, List
 
-import matplotlib.pyplot as plt
+import numpy as np
 
 
-def plot_loss(
-    full_result: List[dict],
-    random_result: List[dict],
-    strategy_result: List[dict],
-    save_path: str = "./output/loss.png",
-) -> None:
-    """Plot loss graph.
+def is_list_of_strings(lst: List[str]) -> bool:
+    """Check if a list only contains strings
 
     Args:
-        full_result (List[dict]): Supervised result.
-        random_result (List[dict]): Random result.
-        strategy_result (List[dict]): Strategy result.
-        save_path (str, optional): Path to save. Defaults to "./output/loss.png".
+        lst (List[str]): a list
+
+    Returns:
+        bool: if all element is string, return True, otherwise return False
     """
-
-    random_loss = [log["dice_loss"] for log in random_result]
-    strategy_loss = [log["dice_loss"] for log in strategy_result]
-    full_loss = [full_result["dice_loss"]] * len(random_loss)
-
-    plt.plot(full_loss, label="Supervised", linestyle="dashed")
-    plt.plot(random_loss, label="Random", marker="o")
-    plt.plot(strategy_loss, label="Strategy", marker="o")
-    plt.title("Loss per round")
-    plt.ylabel("DiceLoss")
-    plt.xlabel("round")
-    plt.legend()
-    plt.grid()
-    plt.savefig(save_path)
+    if lst and isinstance(lst, list):
+        return all(isinstance(elem, str) for elem in lst)
+    else:
+        return False
 
 
-def plot_score(
-    full_result: List[dict],
-    random_result: List[dict],
-    strategy_result: List[dict],
-    save_path: str = "./output/score.png",
-) -> None:
-    """Plot score graph.
+def is_list_of_int(lst: List[int]) -> bool:
+    """Check if a list only contains int
 
     Args:
-        full_result (List[dict]): Supervised result.
-        random_result (List[dict]): Random result.
-        strategy_result (List[dict]): Strategy result.
-        save_path (str, optional): Path to save. Defaults to "./output/loss.png".
-    """
-    random_score = [log["iou_score"] for log in random_result]
-    strategy_score = [log["iou_score"] for log in strategy_result]
-    full_score = [full_result["iou_score"]] * len(random_score)
+        lst (List[int]): a list
 
-    plt.plot(full_score, label="Supervised", linestyle="dashed")
-    plt.plot(random_score, label="Random", marker="o")
-    plt.plot(strategy_score, label="Strategy", marker="o")
-    plt.title("Score per round")
-    plt.ylabel("mean IoU")
-    plt.xlabel("round")
-    plt.legend()
-    plt.grid()
-    plt.savefig(save_path)
+    Returns:
+        bool: if all element is int, return True, otherwise return False
+    """
+    if lst and isinstance(lst, list):
+        return all(isinstance(elem, int) for elem in lst)
+    else:
+        return False
+
+
+def is_array_of_bools(array: np.ndarray) -> bool:
+    """Check if a array only contains bool
+
+    Args:
+        array (np.ndarray): numpy array
+
+    Returns:
+        bool: if all element types are bool, return True, otherwise return False
+    """
+    if isinstance(array, np.ndarray) and len(list(array)) != []:
+        return all(type(elem) != bool for elem in array)
+    else:
+        return False
 
 
 def save_json(data: Any, save_path: str) -> None:
