@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "segal"
-version = "0.1.2"
+version = "0.1.4"
 description = "SegAL is an active learning freamwork for semantice segmentation."
 authors = ["Xu Liang <liangxu006@gmail.com>"]
 license = "MIT"
