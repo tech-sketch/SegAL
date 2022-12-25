@@ -9,16 +9,16 @@ This tutorial explain how SegAL performs active learning cycle for semantic segm
 python examples/run_al_cycle.py --dataset CamVid  --data_path ./data/CamVid/ --model_name Unet --encoder resnet34 --encoder_weights imagenet --num_classes 12 --strategy LeastConfidence --seed_ratio 0.02 --query_ratio 0.02 --n_epoch 1
 ```
 
-- `dataset`: which dataset to use, [`CamVid`](http://mi.eng.cam.ac.uk/research/projects/VideoRec/CamVid/)、[`VOC`](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/)、[`CityScapes`](https://www.cityscapes-dataset.com/)
+- `dataset`: which dataset to use, [`CamVid`](http://mi.eng.cam.ac.uk/research/projects/VideoRec/CamVid/)、[`VOC`](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/)、[`CityScapes`](https://www.cityscapes-dataset.com/). The script will download `CamVid` and `VOC` dataset automatically. Notice that `VOC` does not release the test dataset, so we use the validation dataset as test dataset and 10% of training dataset as the validation dataset. The user should download `CityScapes` dataset manually and make user that it contains the `gtFine` and `leftImg8bit` folders. 
 - `data_path`: the path where the data store
-- `crop_size`: corp size. Corp big size image to train faster.
-- `num_classes`: number of classes
+- `crop_size`: corp size. Corp big size image to train faster. This parameter will be used for `VOC` and `CityScapes` datasets, because the size of these datasets are big.
+- `num_classes`: number of classes. If you do not know how many classes, [this](https://github.com/tech-sketch/SegAL/blob/main/examples/utils/dataset_prepare.py) would be helpful.
 - `model_name`: name of segmentation model. More model names can be found in [architectures](https://github.com/qubvel/segmentation_models.pytorch#architectures-)
 - `encoder`: name of encoder used in model. More encoder names can be found in [encoders](https://github.com/qubvel/segmentation_models.pytorch#encoders-)
 - `encoder_weights`: pretrained weights. See [encoder table](https://github.com/qubvel/segmentation_models.pytorch#encoders-) with available weights for each encoder
 - `strategy`: name of sampling strategy. Available strategies: `RandomSampling`, `LeastConfidence`, `MarginSampling`, `EntropySampling`, `CealSampling`, `VoteSampling`. You can find the papers for these strategy in [here](https://github.com/cure-lab/deep-active-learning/tree/main#deep-active-learning-strategies)
-- `seed_ratio`: percentage of seed data. The  used for initial training. 
-- `query_ratio`: percentage of queried data in each round
+- `seed_ratio`: percentage of seed data. The  used for initial training. We usually set 0.02, which means take 2% of the training dataset as the seed dataset.
+- `query_ratio`: percentage of queried data in each round. We usually set 0.02, which means take 2% of the training dataset in each round.
 - `n_epoch`: number of epoch in each round
 - `random_seed`: random seed
 

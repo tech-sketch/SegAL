@@ -69,3 +69,15 @@ python examples/run_al_cycle.py --dataset CamVid  --data_path ./data/CamVid/ --m
 - `n_epoch`: number of epoch in each round
 
 More explanation can be found in [usage](./docs/usage.md)
+
+
+## Contributing
+
+If you have suggestions for how SeqAL could be improved, or want to report a bug, open an issue! We'd love all and any contributions.
+
+For more, check out the [Contributing Guide](./CONTRIBUTING.md).
+
+## Credits
+
+- [segmentation_models.pytorch](https://github.com/qubvel/segmentation_models.pytorch)
+
