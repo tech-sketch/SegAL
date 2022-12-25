@@ -14,7 +14,10 @@ lint:
 	poetry run flake8 examples
 	poetry run flake8 tests
 
-	poetry run codespell
+	poetry run mypy segal
+
+spell:
+	poetry run codespell	
 
 test:
 	poetry run pytest tests
